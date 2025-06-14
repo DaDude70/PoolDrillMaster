@@ -21,31 +21,38 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
       backgroundColor: '#000000', // Black background for projection
     });
 
-    // Clone the main canvas content
+    // Get the canvas data and clone it properly
     const canvasData = canvas.toJSON();
     
-    // Scale factor to fit screen
-    const scaleX = window.innerWidth / canvas.width!;
-    const scaleY = window.innerHeight / canvas.height!;
-    const scale = Math.min(scaleX, scaleY);
+    // Calculate scale factor to fit screen while maintaining aspect ratio
+    const canvasWidth = canvas.width || 900;
+    const canvasHeight = canvas.height || 450;
+    const scaleX = window.innerWidth / canvasWidth;
+    const scaleY = window.innerHeight / canvasHeight;
+    const scale = Math.min(scaleX, scaleY) * 0.9; // Use 90% of available space
 
+    // Calculate center position
+    const centerX = (window.innerWidth - canvasWidth * scale) / 2;
+    const centerY = (window.innerHeight - canvasHeight * scale) / 2;
+
+    // Load the canvas data
     projectionCanvas.loadFromJSON(canvasData, () => {
-      // Center and scale the content
-      const centerX = (window.innerWidth - canvas.width! * scale) / 2;
-      const centerY = (window.innerHeight - canvas.height! * scale) / 2;
-
+      // Scale and position all objects
       projectionCanvas.getObjects().forEach(obj => {
-        obj.set({
-          left: obj.left! * scale + centerX,
-          top: obj.top! * scale + centerY,
-          scaleX: (obj.scaleX || 1) * scale,
-          scaleY: (obj.scaleY || 1) * scale,
-          selectable: false,
-          evented: false,
-        });
+        if (obj.left !== undefined && obj.top !== undefined) {
+          obj.set({
+            left: obj.left * scale + centerX,
+            top: obj.top * scale + centerY,
+            scaleX: (obj.scaleX || 1) * scale,
+            scaleY: (obj.scaleY || 1) * scale,
+            selectable: false,
+            evented: false,
+          });
+        }
       });
 
       projectionCanvas.renderAll();
+      console.log('Projection canvas loaded with objects:', projectionCanvas.getObjects().length);
     });
 
     // Handle escape key
