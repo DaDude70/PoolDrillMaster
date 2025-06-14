@@ -32,6 +32,12 @@ export const BilliardEditor = () => {
       backgroundColor: '#8B0000', // Dark red to simulate pool table felt
     });
 
+    // Initialize the freeDrawingBrush properly for Fabric.js v6
+    if (canvas.freeDrawingBrush) {
+      canvas.freeDrawingBrush.color = '#FFFF00';
+      canvas.freeDrawingBrush.width = 3;
+    }
+
     // Draw table rails/borders
     const railWidth = 20;
     const topRail = new Rect({
@@ -99,10 +105,6 @@ export const BilliardEditor = () => {
       canvas.add(pocket);
     });
 
-    // Configure free drawing
-    canvas.freeDrawingBrush.color = '#FFFF00'; // Bright yellow for visibility
-    canvas.freeDrawingBrush.width = 3;
-
     setFabricCanvas(canvas);
     toast.success("Billiard table ready! Start creating your drill.");
 
@@ -116,7 +118,8 @@ export const BilliardEditor = () => {
 
     fabricCanvas.isDrawingMode = activeTool === 'freeDraw';
     
-    if (activeTool === 'freeDraw') {
+    // Check if freeDrawingBrush exists before accessing it
+    if (activeTool === 'freeDraw' && fabricCanvas.freeDrawingBrush) {
       fabricCanvas.freeDrawingBrush.color = '#FFFF00';
       fabricCanvas.freeDrawingBrush.width = 3;
     }
