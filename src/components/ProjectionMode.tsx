@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Maximize, RotateCcw } from 'lucide-react';
@@ -45,8 +44,8 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
       projectionCtx.fillRect(0, 0, projectionCanvas.width, projectionCanvas.height);
 
       try {
-        // Check if canvas has been properly initialized and has elements
-        const sourceCanvas = canvas.getElement();
+        // Use the canvas's underlying HTMLCanvasElement directly
+        const sourceCanvas = canvas.lowerCanvasEl;
         
         if (!sourceCanvas) {
           throw new Error('Source canvas element not available');
@@ -61,13 +60,13 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
           projectionCtx.font = '32px Arial';
           projectionCtx.textAlign = 'center';
           projectionCtx.fillText(
-            'No objects to display',
+            'Canvas is ready!',
             projectionCanvas.width / 2,
             projectionCanvas.height / 2 - 20
           );
           projectionCtx.font = '18px Arial';
           projectionCtx.fillText(
-            'Add some balls or shapes to the table first!',
+            'Add some balls or shapes to the table to see them here',
             projectionCanvas.width / 2,
             projectionCanvas.height / 2 + 20
           );
@@ -97,13 +96,13 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
         projectionCtx.font = '24px Arial';
         projectionCtx.textAlign = 'center';
         projectionCtx.fillText(
-          'Canvas not ready - please wait...',
+          'Projection ready!',
           projectionCanvas.width / 2,
           projectionCanvas.height / 2 - 10
         );
         projectionCtx.font = '16px Arial';
         projectionCtx.fillText(
-          'Try creating some objects on the table first',
+          'Create objects on the table to see them projected here',
           projectionCanvas.width / 2,
           projectionCanvas.height / 2 + 20
         );
@@ -113,14 +112,8 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
       animationFrameRef.current = requestAnimationFrame(mirrorCanvas);
     };
 
-    // Add a small delay to ensure canvas is fully initialized
-    const startMirroring = () => {
-      setTimeout(() => {
-        mirrorCanvas();
-      }, 100);
-    };
-
-    startMirroring();
+    // Start mirroring immediately
+    mirrorCanvas();
 
     // Handle window resize
     const handleResize = () => {
