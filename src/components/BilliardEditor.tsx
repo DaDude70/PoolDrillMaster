@@ -194,16 +194,11 @@ export const BilliardEditor = () => {
     }
 
     if (ballText) {
-      const textColor = (ballNumber >= 1 && ballNumber <= 7 && ['#FFFF00', '#FF8C00'].includes(ballColor)) || 
-                       ballNumber === 8 ? 
-                       (ballNumber === 8 ? '#FFFFFF' : '#000000') : 
-                       '#000000';
-      
       const text = new Text(ballText, {
         left: x - 5,
         top: y - 8,
         fontSize: 12,
-        fill: textColor,
+        fill: '#FFFFFF', // Always white text for all balls
         fontFamily: 'Arial',
         selectable: false,
         evented: false,
@@ -230,9 +225,9 @@ export const BilliardEditor = () => {
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, 24, 24);
     
-    // Colored stripes
+    // Colored stripe with larger middle area
     ctx.fillStyle = color;
-    ctx.fillRect(0, 8, 24, 8);
+    ctx.fillRect(0, 5, 24, 14); // Larger middle stripe (from 5 to 19, total 14px out of 24px)
     
     return canvas;
   };

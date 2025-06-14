@@ -76,7 +76,7 @@ export const BallPalette = ({ selectedNumber, onNumberChange }: BallPaletteProps
               onClick={() => onNumberChange(index + 9)}
               className="h-12 w-12 p-0 rounded-full relative border-2 border-gray-800 font-bold text-sm text-white"
               style={{
-                background: `linear-gradient(180deg, white 25%, ${ball.color} 25%, ${ball.color} 75%, white 75%)`
+                background: `linear-gradient(180deg, white 20%, ${ball.color} 20%, ${ball.color} 80%, white 80%)`
               }}
             >
               {ball.number}
