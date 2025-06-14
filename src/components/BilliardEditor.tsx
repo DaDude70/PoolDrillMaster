@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas as FabricCanvas, Circle, Rect, Line, Path, Text, Group, Pattern, Shadow } from 'fabric';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { ProjectionMode } from './ProjectionMode';
 import { Monitor, Edit3, Save, FolderOpen, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export type Tool = 'select' | 'ball' | 'freeDraw' | 'straightLine' | 'circle' | 'rectangle';
+export type Tool = 'select' | 'ball' | 'straightLine' | 'circle' | 'rectangle';
 
 export const BilliardEditor = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -65,13 +64,7 @@ export const BilliardEditor = () => {
   useEffect(() => {
     if (!fabricCanvas) return;
 
-    fabricCanvas.isDrawingMode = activeTool === 'freeDraw';
-    
-    // Check if freeDrawingBrush exists before accessing it
-    if (activeTool === 'freeDraw' && fabricCanvas.freeDrawingBrush) {
-      fabricCanvas.freeDrawingBrush.color = '#FFFF00';
-      fabricCanvas.freeDrawingBrush.width = 3;
-    }
+    fabricCanvas.isDrawingMode = false;
   }, [activeTool, fabricCanvas]);
 
   const createBall = (x: number, y: number, ballNumber: number) => {
