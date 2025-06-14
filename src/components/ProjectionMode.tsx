@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { Canvas as FabricCanvas } from 'fabric';
+import { Canvas as FabricCanvas, Text } from 'fabric';
 
 interface ProjectionModeProps {
   canvas: FabricCanvas | null;
@@ -18,7 +18,14 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
       return;
     }
 
-    console.log('Original canvas objects:', canvas.getObjects().length);
+    // Add detailed debugging
+    console.log('Canvas instance:', canvas);
+    console.log('Canvas width:', canvas.width);
+    console.log('Canvas height:', canvas.height);
+    
+    const objects = canvas.getObjects();
+    console.log('Original canvas objects:', objects.length);
+    console.log('Objects details:', objects.map(obj => ({ type: obj.type, left: obj.left, top: obj.top })));
     
     const projectionCanvas = new FabricCanvas(projectionCanvasRef.current, {
       width: window.innerWidth,
@@ -26,12 +33,21 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
       backgroundColor: '#000000',
     });
 
-    // Get all objects from the original canvas
-    const objects = canvas.getObjects();
-    console.log('Objects to clone:', objects.length);
-
     if (objects.length === 0) {
-      console.log('No objects found on original canvas');
+      console.log('No objects found on original canvas - showing empty projection');
+      // Add a message to the projection canvas
+      const message = new Text('No objects to display\nAdd some balls or shapes first!', {
+        left: window.innerWidth / 2,
+        top: window.innerHeight / 2,
+        fontSize: 32,
+        fill: '#ffffff',
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        evented: false,
+      });
+      projectionCanvas.add(message);
       projectionCanvas.renderAll();
       return;
     }
@@ -43,30 +59,47 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
     const scaleY = window.innerHeight / canvasHeight;
     const scale = Math.min(scaleX, scaleY) * 0.8; // Use 80% of available space
 
+    console.log('Scale factors:', { scaleX, scaleY, finalScale: scale });
+
     // Calculate center position
     const centerX = (window.innerWidth - canvasWidth * scale) / 2;
     const centerY = (window.innerHeight - canvasHeight * scale) / 2;
 
+    console.log('Center position:', { centerX, centerY });
+
     // Clone each object individually
+    let processedObjects = 0;
     objects.forEach((obj, index) => {
+      console.log(`Processing object ${index}:`, obj.type, obj.left, obj.top);
+      
       obj.clone().then((clonedObj: any) => {
-        console.log(`Cloning object ${index}:`, clonedObj.type);
+        console.log(`Successfully cloned object ${index}:`, clonedObj.type);
         
         // Scale and position the cloned object
+        const newLeft = (clonedObj.left || 0) * scale + centerX;
+        const newTop = (clonedObj.top || 0) * scale + centerY;
+        const newScaleX = (clonedObj.scaleX || 1) * scale;
+        const newScaleY = (clonedObj.scaleY || 1) * scale;
+        
+        console.log(`Positioning object ${index}:`, { newLeft, newTop, newScaleX, newScaleY });
+        
         clonedObj.set({
-          left: (clonedObj.left || 0) * scale + centerX,
-          top: (clonedObj.top || 0) * scale + centerY,
-          scaleX: (clonedObj.scaleX || 1) * scale,
-          scaleY: (clonedObj.scaleY || 1) * scale,
+          left: newLeft,
+          top: newTop,
+          scaleX: newScaleX,
+          scaleY: newScaleY,
           selectable: false,
           evented: false,
         });
 
         projectionCanvas.add(clonedObj);
         projectionCanvas.renderAll();
-        console.log('Added object to projection canvas');
+        
+        processedObjects++;
+        console.log(`Added object ${index} to projection canvas. Total processed: ${processedObjects}/${objects.length}`);
       }).catch((error: any) => {
-        console.error('Error cloning object:', error);
+        console.error(`Error cloning object ${index}:`, error);
+        processedObjects++;
       });
     });
 
