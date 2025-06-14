@@ -32,12 +32,6 @@ export const BilliardEditor = () => {
       backgroundColor: '#8B0000', // Dark red to simulate pool table felt
     });
 
-    // Initialize the freeDrawingBrush properly for Fabric.js v6
-    if (canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.color = '#FFFF00';
-      canvas.freeDrawingBrush.width = 3;
-    }
-
     // Add keyboard event listener for delete
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -193,7 +187,7 @@ export const BilliardEditor = () => {
         left: pointer.x - 25,
         top: pointer.y - 25,
         radius: 25,
-        fill: 'transparent',
+        fill: '#00FFFF',
         stroke: '#00FFFF',
         strokeWidth: 3,
         selectable: true,
@@ -205,7 +199,7 @@ export const BilliardEditor = () => {
         top: pointer.y - 30,
         width: 80,
         height: 60,
-        fill: 'transparent',
+        fill: '#00FFFF',
         stroke: '#00FFFF',
         strokeWidth: 3,
         selectable: true,
