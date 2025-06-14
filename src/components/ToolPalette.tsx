@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MousePointer, Circle, Square, Minus } from 'lucide-react';
+import { MousePointer, Circle, Square, Minus, Ruler, Target } from 'lucide-react';
 import { Tool } from './BilliardEditor';
 
 interface ToolPaletteProps {
@@ -16,6 +16,8 @@ export const ToolPalette = ({ activeTool, onToolChange }: ToolPaletteProps) => {
     { id: 'straightLine' as Tool, label: 'Straight Line', icon: Minus },
     { id: 'circle' as Tool, label: 'Circle Area', icon: Circle },
     { id: 'rectangle' as Tool, label: 'Rectangle Area', icon: Square },
+    { id: 'alignmentTool' as Tool, label: 'Alignment Tool', icon: Ruler },
+    { id: 'trainingAid' as Tool, label: 'Training Aid', icon: Target },
   ];
 
   return (

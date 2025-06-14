@@ -10,9 +10,10 @@ import { CanvasHandler } from './CanvasHandler';
 import { CanvasControls } from './CanvasControls';
 import { BallCreator } from './BallCreator';
 import { ShapeCreator } from './ShapeCreator';
+import { TrainingAidCreator } from './TrainingAidCreator';
 import { Monitor, Edit3 } from 'lucide-react';
 
-export type Tool = 'select' | 'ball' | 'straightLine' | 'circle' | 'rectangle';
+export type Tool = 'select' | 'ball' | 'straightLine' | 'circle' | 'rectangle' | 'alignmentTool' | 'trainingAid';
 
 export const BilliardEditor = () => {
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
@@ -51,6 +52,10 @@ export const BilliardEditor = () => {
       ShapeCreator.createCircle(fabricCanvas, pointer.x, pointer.y);
     } else if (activeTool === 'rectangle') {
       ShapeCreator.createRectangle(fabricCanvas, pointer.x, pointer.y);
+    } else if (activeTool === 'alignmentTool') {
+      TrainingAidCreator.createAlignmentTool(fabricCanvas, pointer.x, pointer.y);
+    } else if (activeTool === 'trainingAid') {
+      TrainingAidCreator.createTrainingAid(fabricCanvas, pointer.x, pointer.y);
     }
   };
 
@@ -113,6 +118,7 @@ export const BilliardEditor = () => {
               <div className="text-sm text-gray-600 space-y-2">
                 <p>• Select a tool and click on the table</p>
                 <p>• For straight lines: click start, then end point</p>
+                <p>• Training aids help with alignment and practice</p>
                 <p>• Use bright colors for projection visibility</p>
                 <p>• Save your drills for later use</p>
               </div>
