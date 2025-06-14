@@ -22,9 +22,18 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
     console.log('Canvas width:', canvas.width);
     console.log('Canvas height:', canvas.height);
     
+    // Force canvas to render and get fresh object list
+    canvas.renderAll();
     const objects = canvas.getObjects();
+    
     console.log('Original canvas objects:', objects.length);
-    console.log('Objects details:', objects.map(obj => ({ type: obj.type, left: obj.left, top: obj.top })));
+    console.log('Objects details:', objects.map(obj => ({ 
+      type: obj.type, 
+      left: obj.left, 
+      top: obj.top,
+      visible: obj.visible,
+      opacity: obj.opacity 
+    })));
     
     const projectionCanvas = new FabricCanvas(projectionCanvasRef.current, {
       width: window.innerWidth,
@@ -65,56 +74,78 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
 
     console.log('Center position:', { centerX, centerY });
 
-    // Try a different approach - serialize and deserialize the canvas
-    const canvasData = canvas.toObject();
-    console.log('Canvas data:', canvasData);
+    // Clone each object individually with better error handling
+    let processedObjects = 0;
+    const totalObjects = objects.length;
     
-    projectionCanvas.loadFromJSON(canvasData).then(() => {
-      console.log('Canvas loaded from JSON successfully');
+    objects.forEach((obj, index) => {
+      console.log(`Processing object ${index}:`, obj.type, 'at position:', obj.left, obj.top);
       
-      // Now scale and position all objects
-      const projectionObjects = projectionCanvas.getObjects();
-      console.log('Projection canvas objects after loading:', projectionObjects.length);
-      
-      projectionObjects.forEach((obj, index) => {
-        console.log(`Transforming object ${index}:`, obj.type);
-        
-        const newLeft = (obj.left || 0) * scale + centerX;
-        const newTop = (obj.top || 0) * scale + centerY;
-        const newScaleX = (obj.scaleX || 1) * scale;
-        const newScaleY = (obj.scaleY || 1) * scale;
-        
-        obj.set({
-          left: newLeft,
-          top: newTop,
-          scaleX: newScaleX,
-          scaleY: newScaleY,
-          selectable: false,
-          evented: false,
+      // Use a more robust cloning approach
+      try {
+        obj.clone().then((clonedObj: any) => {
+          console.log(`Successfully cloned object ${index}:`, clonedObj.type);
+          
+          // Scale and position the cloned object
+          const originalLeft = obj.left || 0;
+          const originalTop = obj.top || 0;
+          const originalScaleX = obj.scaleX || 1;
+          const originalScaleY = obj.scaleY || 1;
+          
+          const newLeft = originalLeft * scale + centerX;
+          const newTop = originalTop * scale + centerY;
+          const newScaleX = originalScaleX * scale;
+          const newScaleY = originalScaleY * scale;
+          
+          console.log(`Positioning object ${index}:`, { 
+            original: { left: originalLeft, top: originalTop },
+            new: { left: newLeft, top: newTop, scaleX: newScaleX, scaleY: newScaleY }
+          });
+          
+          clonedObj.set({
+            left: newLeft,
+            top: newTop,
+            scaleX: newScaleX,
+            scaleY: newScaleY,
+            selectable: false,
+            evented: false,
+            visible: true,
+            opacity: 1,
+          });
+
+          projectionCanvas.add(clonedObj);
+          processedObjects++;
+          
+          console.log(`Added object ${index} to projection canvas. Processed: ${processedObjects}/${totalObjects}`);
+          
+          // Render after each object is added
+          projectionCanvas.renderAll();
+          
+          if (processedObjects === totalObjects) {
+            console.log('All objects processed and added to projection canvas');
+            // Final render to ensure everything is visible
+            setTimeout(() => {
+              projectionCanvas.renderAll();
+              console.log('Final render completed');
+            }, 100);
+          }
+        }).catch((error: any) => {
+          console.error(`Error cloning object ${index}:`, error);
+          processedObjects++;
+          
+          // If all objects are processed (including failed ones), do final render
+          if (processedObjects === totalObjects) {
+            projectionCanvas.renderAll();
+          }
         });
+      } catch (error) {
+        console.error(`Error initiating clone for object ${index}:`, error);
+        processedObjects++;
         
-        console.log(`Object ${index} positioned at:`, { left: newLeft, top: newTop });
-      });
-      
-      projectionCanvas.renderAll();
-      console.log('Projection canvas rendered with', projectionObjects.length, 'objects');
-    }).catch((error) => {
-      console.error('Error loading canvas from JSON:', error);
-      
-      // Fallback: show error message
-      const errorMessage = new Text('Error loading objects for projection', {
-        left: window.innerWidth / 2,
-        top: window.innerHeight / 2,
-        fontSize: 24,
-        fill: '#ff0000',
-        textAlign: 'center',
-        originX: 'center',
-        originY: 'center',
-        selectable: false,
-        evented: false,
-      });
-      projectionCanvas.add(errorMessage);
-      projectionCanvas.renderAll();
+        if (processedObjects === totalObjects) {
+          projectionCanvas.renderAll();
+        }
+      }
     });
 
     // Handle escape key
