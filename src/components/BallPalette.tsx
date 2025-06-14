@@ -54,10 +54,9 @@ export const BallPalette = ({ selectedNumber, onNumberChange }: BallPaletteProps
               variant={selectedNumber === number ? "default" : "outline"}
               size="sm"
               onClick={() => onNumberChange(number)}
-              className="h-12 w-12 p-0 rounded-full relative border-2 border-gray-800 font-bold text-sm"
+              className="h-12 w-12 p-0 rounded-full relative border-2 border-gray-800 font-bold text-sm text-white"
               style={{
-                backgroundColor: solidColors[index],
-                color: solidColors[index] === '#FFFF00' || solidColors[index] === '#FF8C00' ? '#000' : '#fff'
+                backgroundColor: solidColors[index]
               }}
             >
               {number}
@@ -75,10 +74,9 @@ export const BallPalette = ({ selectedNumber, onNumberChange }: BallPaletteProps
               variant={selectedNumber === (index + 9) ? "default" : "outline"}
               size="sm"
               onClick={() => onNumberChange(index + 9)}
-              className="h-12 w-12 p-0 rounded-full relative border-2 border-gray-800 font-bold text-sm"
+              className="h-12 w-12 p-0 rounded-full relative border-2 border-gray-800 font-bold text-sm text-white"
               style={{
-                background: `linear-gradient(45deg, ${ball.color} 40%, white 40%, white 60%, ${ball.color} 60%)`,
-                color: ball.color === '#FFFF00' || ball.color === '#FF8C00' ? '#000' : '#fff'
+                background: `linear-gradient(180deg, white 25%, ${ball.color} 25%, ${ball.color} 75%, white 75%)`
               }}
             >
               {ball.number}
