@@ -39,73 +39,6 @@ export const BilliardEditor = () => {
       canvas.freeDrawingBrush.width = 3;
     }
 
-    // Draw table rails/borders
-    const railWidth = 20;
-    const topRail = new Rect({
-      left: 0,
-      top: 0,
-      width: canvasWidth,
-      height: railWidth,
-      fill: '#4A4A4A',
-      selectable: false,
-      evented: false,
-    });
-    
-    const bottomRail = new Rect({
-      left: 0,
-      top: canvasHeight - railWidth,
-      width: canvasWidth,
-      height: railWidth,
-      fill: '#4A4A4A',
-      selectable: false,
-      evented: false,
-    });
-    
-    const leftRail = new Rect({
-      left: 0,
-      top: 0,
-      width: railWidth,
-      height: canvasHeight,
-      fill: '#4A4A4A',
-      selectable: false,
-      evented: false,
-    });
-    
-    const rightRail = new Rect({
-      left: canvasWidth - railWidth,
-      top: 0,
-      width: railWidth,
-      height: canvasHeight,
-      fill: '#4A4A4A',
-      selectable: false,
-      evented: false,
-    });
-
-    canvas.add(topRail, bottomRail, leftRail, rightRail);
-
-    // Add pocket markers
-    const pocketRadius = 15;
-    const pocketPositions = [
-      { x: railWidth, y: railWidth }, // Top left
-      { x: canvasWidth / 2, y: railWidth }, // Top center
-      { x: canvasWidth - railWidth, y: railWidth }, // Top right
-      { x: railWidth, y: canvasHeight - railWidth }, // Bottom left
-      { x: canvasWidth / 2, y: canvasHeight - railWidth }, // Bottom center
-      { x: canvasWidth - railWidth, y: canvasHeight - railWidth }, // Bottom right
-    ];
-
-    pocketPositions.forEach(pos => {
-      const pocket = new Circle({
-        left: pos.x - pocketRadius,
-        top: pos.y - pocketRadius,
-        radius: pocketRadius,
-        fill: '#000000',
-        selectable: false,
-        evented: false,
-      });
-      canvas.add(pocket);
-    });
-
     // Add keyboard event listener for delete
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -196,11 +129,11 @@ export const BilliardEditor = () => {
 
     if (ballText) {
       const text = new Text(ballText, {
-        left: x - 6, // Adjusted positioning for better centering
+        left: x - (ballText.length > 1 ? 8 : 5), // Better centering for 1 vs 2 digit numbers
         top: y - 8,
-        fontSize: 14, // Slightly larger font for better visibility
+        fontSize: 14,
         fill: '#FFFFFF', // White text for all balls
-        fontFamily: 'Arial Black', // Bolder font for better visibility
+        fontFamily: 'Arial Black',
         fontWeight: 'bold',
         textAlign: 'center',
         selectable: false,
@@ -210,7 +143,7 @@ export const BilliardEditor = () => {
           blur: 1,
           offsetX: 1,
           offsetY: 1
-        }), // Properly constructed Shadow object
+        }),
       });
       
       const group = new Group([ball, text], {
@@ -234,9 +167,9 @@ export const BilliardEditor = () => {
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, 24, 24);
     
-    // Colored stripe with larger middle area
+    // Colored stripe with larger middle area (60% of the ball)
     ctx.fillStyle = color;
-    ctx.fillRect(0, 5, 24, 14); // Larger middle stripe (from 5 to 19, total 14px out of 24px)
+    ctx.fillRect(0, 5, 24, 14); // Larger middle stripe
     
     return canvas;
   };
