@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Maximize, RotateCcw } from 'lucide-react';
-import { Canvas as FabricCanvas } from 'fabric';
+import { Canvas as FabricCanvas, Group } from 'fabric';
 import { DrillData } from '@/types/drill';
 
 interface DrillProjectionProps {
@@ -36,7 +36,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         // Scale to fit the projection screen
         const objects = projectionCanvas.getObjects();
         if (objects.length > 0) {
-          const group = new fabric.Group(objects);
+          const group = new Group(objects);
           const bounds = group.getBoundingRect();
           
           // Calculate scale to fit screen with padding
