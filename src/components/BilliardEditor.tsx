@@ -195,13 +195,21 @@ export const BilliardEditor = () => {
 
     if (ballText) {
       const text = new Text(ballText, {
-        left: x - 5,
+        left: x - 6, // Adjusted positioning for better centering
         top: y - 8,
-        fontSize: 12,
-        fill: '#FFFFFF', // Always white text for all balls
-        fontFamily: 'Arial',
+        fontSize: 14, // Slightly larger font for better visibility
+        fill: '#FFFFFF', // White text for all balls
+        fontFamily: 'Arial Black', // Bolder font for better visibility
+        fontWeight: 'bold',
+        textAlign: 'center',
         selectable: false,
         evented: false,
+        shadow: {
+          color: '#000000',
+          blur: 1,
+          offsetX: 1,
+          offsetY: 1
+        }, // Add shadow for better contrast
       });
       
       const group = new Group([ball, text], {
