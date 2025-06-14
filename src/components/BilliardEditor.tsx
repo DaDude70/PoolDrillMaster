@@ -1,5 +1,6 @@
+
 import React, { useRef, useEffect, useState } from 'react';
-import { Canvas as FabricCanvas, Circle, Rect, Line, Path, Text, Group, Pattern } from 'fabric';
+import { Canvas as FabricCanvas, Circle, Rect, Line, Path, Text, Group, Pattern, Shadow } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { BallPalette } from './BallPalette';
@@ -204,12 +205,12 @@ export const BilliardEditor = () => {
         textAlign: 'center',
         selectable: false,
         evented: false,
-        shadow: {
+        shadow: new Shadow({
           color: '#000000',
           blur: 1,
           offsetX: 1,
           offsetY: 1
-        }, // Add shadow for better contrast
+        }), // Properly constructed Shadow object
       });
       
       const group = new Group([ball, text], {
