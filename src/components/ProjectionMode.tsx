@@ -18,7 +18,6 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
       return;
     }
 
-    // Add detailed debugging
     console.log('Canvas instance:', canvas);
     console.log('Canvas width:', canvas.width);
     console.log('Canvas height:', canvas.height);
@@ -35,7 +34,6 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
 
     if (objects.length === 0) {
       console.log('No objects found on original canvas - showing empty projection');
-      // Add a message to the projection canvas
       const message = new Text('No objects to display\nAdd some balls or shapes first!', {
         left: window.innerWidth / 2,
         top: window.innerHeight / 2,
@@ -57,7 +55,7 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
     const canvasHeight = canvas.height || 450;
     const scaleX = window.innerWidth / canvasWidth;
     const scaleY = window.innerHeight / canvasHeight;
-    const scale = Math.min(scaleX, scaleY) * 0.8; // Use 80% of available space
+    const scale = Math.min(scaleX, scaleY) * 0.8;
 
     console.log('Scale factors:', { scaleX, scaleY, finalScale: scale });
 
@@ -67,23 +65,26 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
 
     console.log('Center position:', { centerX, centerY });
 
-    // Clone each object individually
-    let processedObjects = 0;
-    objects.forEach((obj, index) => {
-      console.log(`Processing object ${index}:`, obj.type, obj.left, obj.top);
+    // Try a different approach - serialize and deserialize the canvas
+    const canvasData = canvas.toObject();
+    console.log('Canvas data:', canvasData);
+    
+    projectionCanvas.loadFromJSON(canvasData).then(() => {
+      console.log('Canvas loaded from JSON successfully');
       
-      obj.clone().then((clonedObj: any) => {
-        console.log(`Successfully cloned object ${index}:`, clonedObj.type);
+      // Now scale and position all objects
+      const projectionObjects = projectionCanvas.getObjects();
+      console.log('Projection canvas objects after loading:', projectionObjects.length);
+      
+      projectionObjects.forEach((obj, index) => {
+        console.log(`Transforming object ${index}:`, obj.type);
         
-        // Scale and position the cloned object
-        const newLeft = (clonedObj.left || 0) * scale + centerX;
-        const newTop = (clonedObj.top || 0) * scale + centerY;
-        const newScaleX = (clonedObj.scaleX || 1) * scale;
-        const newScaleY = (clonedObj.scaleY || 1) * scale;
+        const newLeft = (obj.left || 0) * scale + centerX;
+        const newTop = (obj.top || 0) * scale + centerY;
+        const newScaleX = (obj.scaleX || 1) * scale;
+        const newScaleY = (obj.scaleY || 1) * scale;
         
-        console.log(`Positioning object ${index}:`, { newLeft, newTop, newScaleX, newScaleY });
-        
-        clonedObj.set({
+        obj.set({
           left: newLeft,
           top: newTop,
           scaleX: newScaleX,
@@ -91,16 +92,29 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
           selectable: false,
           evented: false,
         });
-
-        projectionCanvas.add(clonedObj);
-        projectionCanvas.renderAll();
         
-        processedObjects++;
-        console.log(`Added object ${index} to projection canvas. Total processed: ${processedObjects}/${objects.length}`);
-      }).catch((error: any) => {
-        console.error(`Error cloning object ${index}:`, error);
-        processedObjects++;
+        console.log(`Object ${index} positioned at:`, { left: newLeft, top: newTop });
       });
+      
+      projectionCanvas.renderAll();
+      console.log('Projection canvas rendered with', projectionObjects.length, 'objects');
+    }).catch((error) => {
+      console.error('Error loading canvas from JSON:', error);
+      
+      // Fallback: show error message
+      const errorMessage = new Text('Error loading objects for projection', {
+        left: window.innerWidth / 2,
+        top: window.innerHeight / 2,
+        fontSize: 24,
+        fill: '#ff0000',
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        evented: false,
+      });
+      projectionCanvas.add(errorMessage);
+      projectionCanvas.renderAll();
     });
 
     // Handle escape key
