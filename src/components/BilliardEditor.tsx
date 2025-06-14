@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Canvas as FabricCanvas, Circle, Rect, Line, Path, Text, Group } from 'fabric';
+import { Canvas as FabricCanvas, Circle, Rect, Line, Path, Text, Group, Pattern } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { BallPalette } from './BallPalette';
@@ -186,7 +186,7 @@ export const BilliardEditor = () => {
       const stripeColor = stripeColors[stripeIndex];
       
       ball.set({
-        fill: new fabric.Pattern({
+        fill: new Pattern({
           source: createStripePattern(stripeColor),
           repeat: 'repeat'
         })
