@@ -37,67 +37,75 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
 
     updateCanvasSize();
 
-    // Get the source canvas element from Fabric.js
-    const sourceCanvas = canvas.getElement();
-    
     const mirrorCanvas = () => {
-      if (!projectionCtx || !sourceCanvas) return;
+      if (!projectionCtx || !canvas) return;
 
-      // Clear the projection canvas
+      // Clear the projection canvas with background color
       projectionCtx.fillStyle = backgroundColor;
       projectionCtx.fillRect(0, 0, projectionCanvas.width, projectionCanvas.height);
 
-      // Check if source canvas has content
-      const sourceWidth = sourceCanvas.width;
-      const sourceHeight = sourceCanvas.height;
-      
-      if (sourceWidth === 0 || sourceHeight === 0) {
-        // Show "no content" message
-        projectionCtx.fillStyle = backgroundColor === 'black' ? '#ffffff' : '#000000';
-        projectionCtx.font = '32px Arial';
-        projectionCtx.textAlign = 'center';
-        projectionCtx.fillText(
-          'No objects to display',
-          projectionCanvas.width / 2,
-          projectionCanvas.height / 2 - 20
-        );
-        projectionCtx.font = '18px Arial';
-        projectionCtx.fillText(
-          'Add some balls or shapes to the table first!',
-          projectionCanvas.width / 2,
-          projectionCanvas.height / 2 + 20
-        );
-        return;
-      }
-
-      // Calculate scaling to fit the projection canvas while maintaining aspect ratio
-      const scaleX = projectionCanvas.width / sourceWidth;
-      const scaleY = projectionCanvas.height / sourceHeight;
-      const scale = Math.min(scaleX, scaleY) * 0.9; // 90% to add some padding
-
-      // Calculate position to center the scaled canvas
-      const scaledWidth = sourceWidth * scale;
-      const scaledHeight = sourceHeight * scale;
-      const x = (projectionCanvas.width - scaledWidth) / 2;
-      const y = (projectionCanvas.height - scaledHeight) / 2;
-
-      // Draw the source canvas onto the projection canvas
       try {
-        projectionCtx.drawImage(
-          sourceCanvas,
-          0, 0, sourceWidth, sourceHeight,
-          x, y, scaledWidth, scaledHeight
-        );
+        // Check if canvas has been properly initialized and has elements
+        const sourceCanvas = canvas.getElement();
+        
+        if (!sourceCanvas) {
+          throw new Error('Source canvas element not available');
+        }
+
+        const sourceWidth = sourceCanvas.width;
+        const sourceHeight = sourceCanvas.height;
+        
+        if (sourceWidth === 0 || sourceHeight === 0) {
+          // Show "no content" message
+          projectionCtx.fillStyle = backgroundColor === 'black' ? '#ffffff' : '#000000';
+          projectionCtx.font = '32px Arial';
+          projectionCtx.textAlign = 'center';
+          projectionCtx.fillText(
+            'No objects to display',
+            projectionCanvas.width / 2,
+            projectionCanvas.height / 2 - 20
+          );
+          projectionCtx.font = '18px Arial';
+          projectionCtx.fillText(
+            'Add some balls or shapes to the table first!',
+            projectionCanvas.width / 2,
+            projectionCanvas.height / 2 + 20
+          );
+        } else {
+          // Calculate scaling to fit the projection canvas while maintaining aspect ratio
+          const scaleX = projectionCanvas.width / sourceWidth;
+          const scaleY = projectionCanvas.height / sourceHeight;
+          const scale = Math.min(scaleX, scaleY) * 0.9; // 90% to add some padding
+
+          // Calculate position to center the scaled canvas
+          const scaledWidth = sourceWidth * scale;
+          const scaledHeight = sourceHeight * scale;
+          const x = (projectionCanvas.width - scaledWidth) / 2;
+          const y = (projectionCanvas.height - scaledHeight) / 2;
+
+          // Draw the source canvas onto the projection canvas
+          projectionCtx.drawImage(
+            sourceCanvas,
+            0, 0, sourceWidth, sourceHeight,
+            x, y, scaledWidth, scaledHeight
+          );
+        }
       } catch (error) {
-        console.error('Error drawing canvas:', error);
-        // Fallback: show error message
+        console.error('Error accessing canvas element:', error);
+        // Show fallback message
         projectionCtx.fillStyle = backgroundColor === 'black' ? '#ffffff' : '#000000';
         projectionCtx.font = '24px Arial';
         projectionCtx.textAlign = 'center';
         projectionCtx.fillText(
-          'Projection Error - Try refreshing',
+          'Canvas not ready - please wait...',
           projectionCanvas.width / 2,
-          projectionCanvas.height / 2
+          projectionCanvas.height / 2 - 10
+        );
+        projectionCtx.font = '16px Arial';
+        projectionCtx.fillText(
+          'Try creating some objects on the table first',
+          projectionCanvas.width / 2,
+          projectionCanvas.height / 2 + 20
         );
       }
 
@@ -105,8 +113,14 @@ export const ProjectionMode = ({ canvas, onExit }: ProjectionModeProps) => {
       animationFrameRef.current = requestAnimationFrame(mirrorCanvas);
     };
 
-    // Start the mirroring process
-    mirrorCanvas();
+    // Add a small delay to ensure canvas is fully initialized
+    const startMirroring = () => {
+      setTimeout(() => {
+        mirrorCanvas();
+      }, 100);
+    };
+
+    startMirroring();
 
     // Handle window resize
     const handleResize = () => {
