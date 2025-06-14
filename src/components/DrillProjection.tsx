@@ -16,6 +16,66 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState<'black' | 'white' | 'green'>('black');
 
+  const scaleAndCenterDrill = (projectionCanvas: FabricCanvas) => {
+    const objects = projectionCanvas.getObjects();
+    if (objects.length === 0) return;
+
+    // Get current screen dimensions
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    
+    // Calculate the bounding box of all objects
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    
+    objects.forEach(obj => {
+      const bounds = obj.getBoundingRect();
+      minX = Math.min(minX, bounds.left);
+      minY = Math.min(minY, bounds.top);
+      maxX = Math.max(maxX, bounds.left + bounds.width);
+      maxY = Math.max(maxY, bounds.top + bounds.height);
+    });
+    
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    
+    // Calculate scale to fit screen with 10% padding
+    const scaleX = (screenWidth * 0.9) / contentWidth;
+    const scaleY = (screenHeight * 0.9) / contentHeight;
+    const scale = Math.min(scaleX, scaleY);
+    
+    // Calculate center position
+    const centerX = screenWidth / 2;
+    const centerY = screenHeight / 2;
+    const contentCenterX = minX + contentWidth / 2;
+    const contentCenterY = minY + contentHeight / 2;
+    
+    // Apply scaling and centering to all objects
+    objects.forEach(obj => {
+      // For circles and other objects that should maintain aspect ratio
+      if (obj.type === 'circle' || obj.lockUniScaling) {
+        // Apply uniform scaling
+        obj.scaleX = (obj.scaleX || 1) * scale;
+        obj.scaleY = (obj.scaleY || 1) * scale;
+      } else {
+        // For other objects, allow independent scaling
+        obj.scaleX = (obj.scaleX || 1) * scale;
+        obj.scaleY = (obj.scaleY || 1) * scale;
+      }
+      
+      // Calculate new position relative to content center
+      const relativeX = obj.left - contentCenterX;
+      const relativeY = obj.top - contentCenterY;
+      
+      // Position relative to screen center
+      obj.left = centerX + relativeX * scale;
+      obj.top = centerY + relativeY * scale;
+      
+      obj.setCoords();
+    });
+    
+    projectionCanvas.renderAll();
+  };
+
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -31,29 +91,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     // Load the drill data
     if (drill.canvasData) {
       projectionCanvas.loadFromJSON(drill.canvasData, () => {
-        projectionCanvas.renderAll();
-        
-        // Scale to fit the projection screen
-        const objects = projectionCanvas.getObjects();
-        if (objects.length > 0) {
-          const group = new Group(objects);
-          const bounds = group.getBoundingRect();
-          
-          // Calculate scale to fit screen with padding
-          const scaleX = (window.innerWidth * 0.9) / bounds.width;
-          const scaleY = (window.innerHeight * 0.9) / bounds.height;
-          const scale = Math.min(scaleX, scaleY);
-          
-          // Center and scale all objects
-          objects.forEach(obj => {
-            obj.scaleX = (obj.scaleX || 1) * scale;
-            obj.scaleY = (obj.scaleY || 1) * scale;
-            obj.left = (obj.left - bounds.left) * scale + (window.innerWidth - bounds.width * scale) / 2;
-            obj.top = (obj.top - bounds.top) * scale + (window.innerHeight - bounds.height * scale) / 2;
-          });
-          
-          projectionCanvas.renderAll();
-        }
+        scaleAndCenterDrill(projectionCanvas);
       });
     }
 
@@ -62,12 +100,29 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         width: window.innerWidth,
         height: window.innerHeight
       });
+      
+      // Rescale and recenter after resize
+      if (drill.canvasData) {
+        scaleAndCenterDrill(projectionCanvas);
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      const isNowFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isNowFullscreen);
+      
+      // Small delay to ensure dimensions are updated after fullscreen change
+      setTimeout(() => {
+        handleResize();
+      }, 100);
     };
 
     window.addEventListener('resize', handleResize);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
       projectionCanvas.dispose();
     };
   }, [drill]);
@@ -103,10 +158,8 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     try {
       if (!document.fullscreenElement) {
         await document.documentElement.requestFullscreen();
-        setIsFullscreen(true);
       } else {
         await document.exitFullscreen();
-        setIsFullscreen(false);
       }
     } catch (error) {
       console.error('Fullscreen error:', error);

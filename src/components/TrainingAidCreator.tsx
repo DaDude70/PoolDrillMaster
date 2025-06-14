@@ -31,6 +31,7 @@ export class TrainingAidCreator {
         fill: '#ffffff',
         stroke: '#ffffff',
         strokeWidth: 1,
+        lockUniScaling: true, // Ensure circles stay circular
       });
       marks.push(mark);
     }
@@ -75,7 +76,7 @@ export class TrainingAidCreator {
         fill: 'transparent',
         stroke: '#ffffff',
         strokeWidth: 3,
-        lockUniScaling: true,
+        lockUniScaling: true, // Ensure circles stay circular
       });
       
       // Inner circle - lockUniScaling prevents distortion
@@ -86,7 +87,7 @@ export class TrainingAidCreator {
         fill: '#ffffff',
         stroke: '#1e40af',
         strokeWidth: 2,
-        lockUniScaling: true,
+        lockUniScaling: true, // Ensure circles stay circular
       });
       
       // Center dot - lockUniScaling prevents distortion
@@ -97,7 +98,7 @@ export class TrainingAidCreator {
         fill: '#dc2626',
         stroke: '#dc2626',
         strokeWidth: 1,
-        lockUniScaling: true,
+        lockUniScaling: true, // Ensure circles stay circular
       });
       
       circles.push(outerCircle, innerCircle, centerDot);
