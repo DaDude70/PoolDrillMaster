@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Maximize, RotateCcw } from 'lucide-react';
@@ -51,11 +50,13 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     
     // Apply scaling and centering to all objects
     objects.forEach(obj => {
-      // For circles and other objects that should maintain aspect ratio
-      if (obj.type === 'circle' || obj.lockUniScaling) {
-        // Apply uniform scaling
-        obj.scaleX = (obj.scaleX || 1) * scale;
-        obj.scaleY = (obj.scaleY || 1) * scale;
+      // For circles, maintain aspect ratio by using uniform scaling
+      if (obj.type === 'circle') {
+        obj.scaleX = scale;
+        obj.scaleY = scale;
+        // Lock scaling to maintain circular shape
+        obj.lockScalingX = true;
+        obj.lockScalingY = true;
       } else {
         // For other objects, allow independent scaling
         obj.scaleX = (obj.scaleX || 1) * scale;
