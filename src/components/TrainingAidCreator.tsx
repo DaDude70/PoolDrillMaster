@@ -20,13 +20,17 @@ export class TrainingAidCreator {
       ry: 15,
     });
 
-    // Add white alignment marks along the rail
+    // Add white alignment circles along the rail
     const marks = [];
     const markSpacing = 50;
     for (let i = 0; i <= railLength; i += markSpacing) {
-      const mark = new Line([x - railLength / 2 + i, y - 10, x - railLength / 2 + i, y + 10], {
+      const mark = new Circle({
+        left: x - railLength / 2 + i - 4,
+        top: y - 4,
+        radius: 4,
+        fill: '#ffffff',
         stroke: '#ffffff',
-        strokeWidth: 2,
+        strokeWidth: 1,
       });
       marks.push(mark);
     }
@@ -58,12 +62,12 @@ export class TrainingAidCreator {
       ry: 30,
     });
 
-    // Create target circles at strategic positions
+    // Create target circles at strategic positions - these will maintain their shape
     const circles = [];
     const circlePositions = [-120, 0, 120]; // Relative to center
     
     circlePositions.forEach(pos => {
-      // Outer circle
+      // Outer circle - lockUniScaling prevents distortion
       const outerCircle = new Circle({
         left: x + pos - 20,
         top: y - 20,
@@ -71,9 +75,10 @@ export class TrainingAidCreator {
         fill: 'transparent',
         stroke: '#ffffff',
         strokeWidth: 3,
+        lockUniScaling: true,
       });
       
-      // Inner circle
+      // Inner circle - lockUniScaling prevents distortion
       const innerCircle = new Circle({
         left: x + pos - 8,
         top: y - 8,
@@ -81,9 +86,10 @@ export class TrainingAidCreator {
         fill: '#ffffff',
         stroke: '#1e40af',
         strokeWidth: 2,
+        lockUniScaling: true,
       });
       
-      // Center dot
+      // Center dot - lockUniScaling prevents distortion
       const centerDot = new Circle({
         left: x + pos - 3,
         top: y - 3,
@@ -91,6 +97,7 @@ export class TrainingAidCreator {
         fill: '#dc2626',
         stroke: '#dc2626',
         strokeWidth: 1,
+        lockUniScaling: true,
       });
       
       circles.push(outerCircle, innerCircle, centerDot);
