@@ -1,6 +1,5 @@
-
 import React, { useRef, useEffect, useState } from 'react';
-import { Canvas as FabricCanvas, Circle, Rect, Line, Path } from 'fabric';
+import { Canvas as FabricCanvas, Circle, Rect, Line, Path, Text, Group } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { BallPalette } from './BallPalette';
@@ -154,7 +153,7 @@ export const BilliardEditor = () => {
     });
 
     if (ballText) {
-      const text = new fabric.Text(ballText, {
+      const text = new Text(ballText, {
         left: x - 5,
         top: y - 8,
         fontSize: 12,
@@ -164,7 +163,7 @@ export const BilliardEditor = () => {
         evented: false,
       });
       
-      const group = new fabric.Group([ball, text], {
+      const group = new Group([ball, text], {
         left: x - ballRadius,
         top: y - ballRadius,
       });
