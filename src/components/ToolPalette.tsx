@@ -12,9 +12,7 @@ interface ToolPaletteProps {
 export const ToolPalette = ({ activeTool, onToolChange }: ToolPaletteProps) => {
   const tools = [
     { id: 'select' as Tool, label: 'Select', icon: MousePointer },
-    { id: 'cue' as Tool, label: 'Cue Ball', icon: Circle },
-    { id: 'solid' as Tool, label: 'Solid Ball', icon: Circle },
-    { id: 'stripe' as Tool, label: 'Stripe Ball', icon: Circle },
+    { id: 'ball' as Tool, label: 'Place Ball', icon: Circle },
     { id: 'freeDraw' as Tool, label: 'Free Draw', icon: Pen },
     { id: 'straightLine' as Tool, label: 'Straight Line', icon: Minus },
     { id: 'circle' as Tool, label: 'Circle Area', icon: Circle },

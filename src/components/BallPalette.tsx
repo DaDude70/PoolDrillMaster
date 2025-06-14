@@ -13,16 +13,38 @@ export const BallPalette = ({ selectedNumber, onNumberChange }: BallPaletteProps
   
   const solidColors = [
     '#FFFF00', // 1 - Yellow
-    '#0000FF', // 2 - Blue  
+    '#0066FF', // 2 - Blue  
     '#FF0000', // 3 - Red
     '#800080', // 4 - Purple
-    '#FFA500', // 5 - Orange
-    '#008000', // 6 - Green
-    '#800000', // 7 - Maroon
+    '#FF8C00', // 5 - Orange
+    '#006400', // 6 - Green
+    '#8B0000', // 7 - Maroon
+  ];
+
+  const stripeBallsData = [
+    { number: 9, color: '#FFFF00' }, // Yellow stripe
+    { number: 10, color: '#0066FF' }, // Blue stripe
+    { number: 11, color: '#FF0000' }, // Red stripe
+    { number: 12, color: '#800080' }, // Purple stripe
+    { number: 13, color: '#FF8C00' }, // Orange stripe
+    { number: 14, color: '#006400' }, // Green stripe
+    { number: 15, color: '#8B0000' }, // Maroon stripe
   ];
 
   return (
     <div className="space-y-4">
+      <div>
+        <h4 className="text-sm font-medium mb-2">Cue Ball</h4>
+        <Button
+          variant={selectedNumber === 0 ? "default" : "outline"}
+          size="sm"
+          onClick={() => onNumberChange(0)}
+          className="h-12 w-12 p-0 rounded-full bg-white border-2 border-gray-300 text-black font-bold"
+        >
+          CUE
+        </Button>
+      </div>
+
       <div>
         <h4 className="text-sm font-medium mb-2">Solid Balls (1-7)</h4>
         <div className="grid grid-cols-4 gap-2">
@@ -32,13 +54,10 @@ export const BallPalette = ({ selectedNumber, onNumberChange }: BallPaletteProps
               variant={selectedNumber === number ? "default" : "outline"}
               size="sm"
               onClick={() => onNumberChange(number)}
-              className="h-10 w-10 p-0 rounded-full relative"
+              className="h-12 w-12 p-0 rounded-full relative border-2 border-gray-800 font-bold text-sm"
               style={{
-                backgroundColor: selectedNumber === number ? solidColors[index] : 'transparent',
-                borderColor: solidColors[index],
-                color: selectedNumber === number ? 
-                  (solidColors[index] === '#FFFF00' || solidColors[index] === '#FFA500' ? '#000' : '#fff') : 
-                  solidColors[index]
+                backgroundColor: solidColors[index],
+                color: solidColors[index] === '#FFFF00' || solidColors[index] === '#FF8C00' ? '#000' : '#fff'
               }}
             >
               {number}
@@ -50,15 +69,19 @@ export const BallPalette = ({ selectedNumber, onNumberChange }: BallPaletteProps
       <div>
         <h4 className="text-sm font-medium mb-2">Stripe Balls (9-15)</h4>
         <div className="grid grid-cols-4 gap-2">
-          {stripeBalls.map((number) => (
+          {stripeBallsData.map((ball, index) => (
             <Button
-              key={number}
-              variant={selectedNumber === (number - 8) ? "default" : "outline"}
+              key={ball.number}
+              variant={selectedNumber === (index + 9) ? "default" : "outline"}
               size="sm"
-              onClick={() => onNumberChange(number - 8)}
-              className="h-10 w-10 p-0 rounded-full"
+              onClick={() => onNumberChange(index + 9)}
+              className="h-12 w-12 p-0 rounded-full relative border-2 border-gray-800 font-bold text-sm"
+              style={{
+                background: `linear-gradient(45deg, ${ball.color} 40%, white 40%, white 60%, ${ball.color} 60%)`,
+                color: ball.color === '#FFFF00' || ball.color === '#FF8C00' ? '#000' : '#fff'
+              }}
             >
-              {number}
+              {ball.number}
             </Button>
           ))}
         </div>
@@ -70,7 +93,7 @@ export const BallPalette = ({ selectedNumber, onNumberChange }: BallPaletteProps
           variant={selectedNumber === 8 ? "default" : "outline"}
           size="sm"
           onClick={() => onNumberChange(8)}
-          className="h-10 w-10 p-0 rounded-full bg-black text-white border-black"
+          className="h-12 w-12 p-0 rounded-full bg-black text-white border-2 border-gray-800 font-bold"
         >
           8
         </Button>

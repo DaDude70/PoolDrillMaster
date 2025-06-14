@@ -8,7 +8,7 @@ import { ProjectionMode } from './ProjectionMode';
 import { Monitor, Edit3, Save, FolderOpen, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export type Tool = 'select' | 'cue' | 'solid' | 'stripe' | 'freeDraw' | 'straightLine' | 'circle' | 'rectangle';
+export type Tool = 'select' | 'ball' | 'freeDraw' | 'straightLine' | 'circle' | 'rectangle';
 
 export const BilliardEditor = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -105,10 +105,25 @@ export const BilliardEditor = () => {
       canvas.add(pocket);
     });
 
+    // Add keyboard event listener for delete
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length > 0) {
+          activeObjects.forEach(obj => canvas.remove(obj));
+          canvas.discardActiveObject();
+          canvas.renderAll();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
     setFabricCanvas(canvas);
     toast.success("Billiard table ready! Start creating your drill.");
 
     return () => {
+      document.removeEventListener('keydown', handleKeyDown);
       canvas.dispose();
     };
   }, []);
@@ -125,7 +140,7 @@ export const BilliardEditor = () => {
     }
   }, [activeTool, fabricCanvas]);
 
-  const createBall = (x: number, y: number, ballType: 'cue' | 'solid' | 'stripe', number?: number) => {
+  const createBall = (x: number, y: number, ballNumber: number) => {
     if (!fabricCanvas) return;
 
     const ballRadius = 12;
@@ -133,17 +148,26 @@ export const BilliardEditor = () => {
     let strokeColor = '#000000';
     let ballText = '';
 
-    if (ballType === 'cue') {
+    if (ballNumber === 0) {
+      // Cue ball
       ballColor = '#FFFFFF';
       ballText = '';
-    } else if (ballType === 'solid') {
-      const solidColors = ['#FFFF00', '#0000FF', '#FF0000', '#800080', '#FFA500', '#008000', '#800000', '#000000'];
-      ballColor = solidColors[Math.min(number! - 1, solidColors.length - 1)];
-      ballText = number!.toString();
-    } else if (ballType === 'stripe') {
+    } else if (ballNumber >= 1 && ballNumber <= 7) {
+      // Solid balls
+      const solidColors = ['#FFFF00', '#0066FF', '#FF0000', '#800080', '#FF8C00', '#006400', '#8B0000'];
+      ballColor = solidColors[ballNumber - 1];
+      ballText = ballNumber.toString();
+    } else if (ballNumber === 8) {
+      // 8-ball
+      ballColor = '#000000';
+      ballText = '8';
+    } else if (ballNumber >= 9 && ballNumber <= 15) {
+      // Stripe balls
+      const stripeColors = ['#FFFF00', '#0066FF', '#FF0000', '#800080', '#FF8C00', '#006400', '#8B0000'];
+      const stripeIndex = ballNumber - 9;
       ballColor = '#FFFFFF';
-      strokeColor = '#000000';
-      ballText = (number! + 8).toString();
+      strokeColor = stripeColors[stripeIndex];
+      ballText = ballNumber.toString();
     }
 
     const ball = new Circle({
@@ -155,12 +179,31 @@ export const BilliardEditor = () => {
       strokeWidth: 2,
     });
 
+    // Add stripe pattern for stripe balls
+    if (ballNumber >= 9 && ballNumber <= 15) {
+      const stripeColors = ['#FFFF00', '#0066FF', '#FF0000', '#800080', '#FF8C00', '#006400', '#8B0000'];
+      const stripeIndex = ballNumber - 9;
+      const stripeColor = stripeColors[stripeIndex];
+      
+      ball.set({
+        fill: new fabric.Pattern({
+          source: createStripePattern(stripeColor),
+          repeat: 'repeat'
+        })
+      });
+    }
+
     if (ballText) {
+      const textColor = (ballNumber >= 1 && ballNumber <= 7 && ['#FFFF00', '#FF8C00'].includes(ballColor)) || 
+                       ballNumber === 8 ? 
+                       (ballNumber === 8 ? '#FFFFFF' : '#000000') : 
+                       '#000000';
+      
       const text = new Text(ballText, {
         left: x - 5,
         top: y - 8,
         fontSize: 12,
-        fill: ballType === 'solid' && ballColor === '#000000' ? '#FFFFFF' : '#000000',
+        fill: textColor,
         fontFamily: 'Arial',
         selectable: false,
         evented: false,
@@ -177,17 +220,30 @@ export const BilliardEditor = () => {
     }
   };
 
+  const createStripePattern = (color: string) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 24;
+    canvas.height = 24;
+    const ctx = canvas.getContext('2d')!;
+    
+    // White background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 24, 24);
+    
+    // Colored stripes
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 8, 24, 8);
+    
+    return canvas;
+  };
+
   const handleCanvasClick = (e: any) => {
     if (!fabricCanvas) return;
 
     const pointer = fabricCanvas.getPointer(e.e);
     
-    if (activeTool === 'cue') {
-      createBall(pointer.x, pointer.y, 'cue');
-    } else if (activeTool === 'solid') {
-      createBall(pointer.x, pointer.y, 'solid', selectedBallNumber);
-    } else if (activeTool === 'stripe') {
-      createBall(pointer.x, pointer.y, 'stripe', selectedBallNumber);
+    if (activeTool === 'ball') {
+      createBall(pointer.x, pointer.y, selectedBallNumber);
     } else if (activeTool === 'straightLine') {
       if (!isDrawingLine) {
         setLineStartPoint({ x: pointer.x, y: pointer.y });
@@ -210,6 +266,7 @@ export const BilliardEditor = () => {
         fill: 'transparent',
         stroke: '#00FFFF',
         strokeWidth: 3,
+        selectable: true,
       });
       fabricCanvas.add(circle);
     } else if (activeTool === 'rectangle') {
@@ -221,6 +278,7 @@ export const BilliardEditor = () => {
         fill: 'transparent',
         stroke: '#00FFFF',
         strokeWidth: 3,
+        selectable: true,
       });
       fabricCanvas.add(rect);
     }
