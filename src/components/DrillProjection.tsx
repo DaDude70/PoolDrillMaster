@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Maximize, RotateCcw, MousePointer } from 'lucide-react';
+import { X, Maximize, RotateCcw } from 'lucide-react';
 import { Canvas as FabricCanvas, Group } from 'fabric';
 import { DrillData } from '@/types/drill';
-import { ProjectionPointer } from './ProjectionPointer';
 
 interface DrillProjectionProps {
   drill: DrillData;
@@ -15,7 +14,6 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState<'black' | 'white' | 'green'>('black');
-  const [showPointer, setShowPointer] = useState(false);
 
   const scaleAndCenterDrill = (projectionCanvas: FabricCanvas) => {
     const objects = projectionCanvas.getObjects();
@@ -150,8 +148,6 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         setBackgroundColor(prev => 
           prev === 'black' ? 'white' : prev === 'white' ? 'green' : 'black'
         );
-      } else if (e.key === 'p' || e.key === 'P') {
-        setShowPointer(prev => !prev);
       }
     };
 
@@ -182,15 +178,6 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   return (
     <div className={`fixed inset-0 z-50 ${getBackgroundClass()}`}>
       <div className="absolute top-4 right-4 z-10 flex gap-2">
-        <Button
-          onClick={() => setShowPointer(!showPointer)}
-          className={`${showPointer ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'} text-white`}
-          size="sm"
-        >
-          <MousePointer className="w-4 h-4 mr-2" />
-          Pointer
-        </Button>
-        
         <Button
           onClick={() => setBackgroundColor(prev => 
             prev === 'black' ? 'white' : prev === 'white' ? 'green' : 'black'
@@ -223,16 +210,14 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
       
       <canvas 
         ref={canvasRef}
-        className={`w-full h-full ${showPointer ? 'cursor-none' : 'cursor-default'}`}
+        className="w-full h-full cursor-none"
         style={{ display: 'block' }}
       />
-      
-      <ProjectionPointer isVisible={showPointer} />
       
       <div className={`absolute bottom-4 left-4 text-sm ${backgroundColor === 'white' ? 'text-black' : 'text-white'}`}>
         <div className="font-medium">{drill.name}</div>
         <div className="text-xs opacity-75">{drill.description}</div>
-        <div className="text-xs opacity-50 mt-2">ESC: Exit • F: Fullscreen • B: Background • P: Pointer</div>
+        <div className="text-xs opacity-50 mt-2">ESC: Exit • F: Fullscreen • B: Background</div>
       </div>
     </div>
   );
