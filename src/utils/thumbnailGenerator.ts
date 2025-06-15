@@ -27,10 +27,11 @@ export const generateThumbnail = (canvasData: any): Promise<string> => {
       
       fabricCanvas.renderAll();
       
-      // Convert to data URL
+      // Convert to data URL with required multiplier property
       const dataURL = fabricCanvas.toDataURL({
         format: 'png',
-        quality: 0.8
+        quality: 0.8,
+        multiplier: 1
       });
       
       fabricCanvas.dispose();
