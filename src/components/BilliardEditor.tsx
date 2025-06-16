@@ -7,16 +7,16 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { DrillProjection } from './DrillProjection';
 import { SaveDrillDialog } from './SaveDrillDialog';
 import { CanvasHandler } from './CanvasHandler';
-import { CanvasControls } from './CanvasControls';
 import { BallCreator } from './BallCreator';
 import { ShapeCreator } from './ShapeCreator';
 import { TrainingAidCreator } from './TrainingAidCreator';
 import { FloatingToolbar } from './modern/FloatingToolbar';
 import { AppSidebar } from './modern/AppSidebar';
 import { ThemeToggle } from './modern/ThemeToggle';
+import { CanvasControls } from './modern/CanvasControls';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { DrillData } from '@/types/drill';
-import { Monitor, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 export type Tool = 'select' | 'ball' | 'straightLine' | 'circle' | 'rectangle' | 'alignmentTool' | 'trainingAid';
 
@@ -28,7 +28,6 @@ export const BilliardEditor = () => {
   const [isDrawingLine, setIsDrawingLine] = useState(false);
   const [lineStartPoint, setLineStartPoint] = useState<{x: number, y: number} | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [showDrillManager, setShowDrillManager] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -46,9 +45,9 @@ export const BilliardEditor = () => {
     { key: 'a', callback: () => setActiveTool('alignmentTool'), description: 'Alignment tool' },
     { key: 't', callback: () => setActiveTool('trainingAid'), description: 'Training aid tool' },
     { key: 's', ctrlKey: true, callback: () => setShowSaveDialog(true), description: 'Save drill' },
-    { key: 'o', ctrlKey: true, callback: () => setShowDrillManager(!showDrillManager), description: 'Open library' },
     { key: 'z', ctrlKey: true, callback: () => handleUndo(), description: 'Undo' },
     { key: 'y', ctrlKey: true, callback: () => handleRedo(), description: 'Redo' },
+    { key: 'p', ctrlKey: true, callback: () => handleProjectCurrent(), description: 'Project current drill' },
   ];
 
   useKeyboardShortcuts(shortcuts);
@@ -64,13 +63,77 @@ export const BilliardEditor = () => {
     console.log('Redo action');
   };
 
+  const handleProjectCurrent = () => {
+    if (!fabricCanvas) return;
+    
+    // Create a temporary drill from current canvas state
+    const currentDrill: DrillData = {
+      id: 'temp',
+      name: 'Current Drill',
+      description: 'Live projection of current drill',
+      category: 'practice',
+      canvasData: fabricCanvas.toJSON(),
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    setProjectionDrill(currentDrill);
+  };
+
   useEffect(() => {
     if (!fabricCanvas) return;
     fabricCanvas.isDrawingMode = false;
+
+    // Enable canvas panning with mouse
+    let isPanning = false;
+    let lastPoint: { x: number; y: number } | null = null;
+
+    const handleMouseDown = (e: any) => {
+      if (activeTool === 'select' && e.e.ctrlKey) {
+        isPanning = true;
+        lastPoint = { x: e.e.clientX, y: e.e.clientY };
+        fabricCanvas.isDrawingMode = false;
+        fabricCanvas.selection = false;
+        fabricCanvas.discardActiveObject();
+      }
+    };
+
+    const handleMouseMove = (e: any) => {
+      if (isPanning && lastPoint) {
+        const deltaX = e.e.clientX - lastPoint.x;
+        const deltaY = e.e.clientY - lastPoint.y;
+        
+        const vpt = fabricCanvas.viewportTransform!.slice();
+        vpt[4] += deltaX;
+        vpt[5] += deltaY;
+        
+        fabricCanvas.setViewportTransform(vpt);
+        lastPoint = { x: e.e.clientX, y: e.e.clientY };
+      }
+    };
+
+    const handleMouseUp = () => {
+      isPanning = false;
+      lastPoint = null;
+      fabricCanvas.selection = true;
+    };
+
+    fabricCanvas.on('mouse:down', handleMouseDown);
+    fabricCanvas.on('mouse:move', handleMouseMove);
+    fabricCanvas.on('mouse:up', handleMouseUp);
+
+    return () => {
+      fabricCanvas.off('mouse:down', handleMouseDown);
+      fabricCanvas.off('mouse:move', handleMouseMove);
+      fabricCanvas.off('mouse:up', handleMouseUp);
+    };
   }, [activeTool, fabricCanvas]);
 
   const handleCanvasClick = (e: any) => {
     if (!fabricCanvas) return;
+
+    // Don't handle clicks if panning (Ctrl key pressed)
+    if (e.e.ctrlKey) return;
 
     const pointer = fabricCanvas.getPointer(e.e);
     
@@ -112,12 +175,10 @@ export const BilliardEditor = () => {
     fabricCanvas.loadFromJSON(drill.canvasData, () => {
       fabricCanvas.renderAll();
     });
-    setShowDrillManager(false);
   };
 
   const handleProjectDrill = (drill: DrillData) => {
     setProjectionDrill(drill);
-    setShowDrillManager(false);
   };
 
   const handleNewDrill = () => {
@@ -126,7 +187,6 @@ export const BilliardEditor = () => {
     fabricCanvas.clear();
     fabricCanvas.backgroundColor = '#8B0000';
     fabricCanvas.renderAll();
-    setShowDrillManager(false);
   };
 
   if (projectionDrill) {
@@ -145,7 +205,6 @@ export const BilliardEditor = () => {
           <AppSidebar
             selectedBallNumber={selectedBallNumber}
             onBallNumberChange={setSelectedBallNumber}
-            showDrillManager={showDrillManager}
             onSelectDrill={handleSelectDrill}
             onProjectDrill={handleProjectDrill}
             onNewDrill={handleNewDrill}
@@ -164,16 +223,6 @@ export const BilliardEditor = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => setShowDrillManager(!showDrillManager)}
-                    variant={showDrillManager ? "default" : "outline"}
-                    size="sm"
-                    className="transition-all duration-200"
-                  >
-                    <Monitor className="w-4 h-4 mr-2" />
-                    {showDrillManager ? 'Hide Library' : 'Show Library'}
-                  </Button>
-                  
                   <CanvasControls canvas={fabricCanvas} />
                   <ThemeToggle />
                   
@@ -191,11 +240,7 @@ export const BilliardEditor = () => {
               onUndo={handleUndo}
               onRedo={handleRedo}
               onSave={() => setShowSaveDialog(true)}
-              onOpenLibrary={() => setShowDrillManager(!showDrillManager)}
-              onProject={() => {
-                // TODO: Implement current drill projection
-                console.log('Project current drill');
-              }}
+              onProject={handleProjectCurrent}
               canUndo={canUndo}
               canRedo={canRedo}
             />
@@ -214,11 +259,16 @@ export const BilliardEditor = () => {
                     {/* Canvas overlay for line drawing feedback */}
                     {isDrawingLine && lineStartPoint && (
                       <div className="absolute inset-0 pointer-events-none">
-                        <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                        <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm backdrop-blur-sm">
                           Click to finish line
                         </div>
                       </div>
                     )}
+
+                    {/* Canvas usage hint */}
+                    <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded">
+                      Ctrl+Drag to pan • Mouse wheel to zoom
+                    </div>
                   </div>
                 </div>
               </Card>

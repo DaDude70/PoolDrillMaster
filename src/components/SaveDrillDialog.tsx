@@ -47,9 +47,11 @@ export const SaveDrillDialog = ({ isOpen, onClose, canvas }: SaveDrillDialogProp
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-lg border-border/50">
         <DialogHeader>
-          <DialogTitle>Save Drill</DialogTitle>
+          <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            Save Drill
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -58,7 +60,7 @@ export const SaveDrillDialog = ({ isOpen, onClose, canvas }: SaveDrillDialogProp
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter drill name..."
-              className="mt-1"
+              className="mt-1 bg-background/50"
             />
           </div>
           <div>
@@ -67,13 +69,13 @@ export const SaveDrillDialog = ({ isOpen, onClose, canvas }: SaveDrillDialogProp
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of the drill..."
-              className="mt-1"
+              className="mt-1 bg-background/50"
             />
           </div>
           <div>
             <label className="text-sm font-medium">Category</label>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="mt-1 bg-background/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -1,7 +1,8 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Maximize, RotateCcw } from 'lucide-react';
-import { Canvas as FabricCanvas, Group } from 'fabric';
+import { X, Maximize, RotateCcw, MinusIcon, PlusIcon } from 'lucide-react';
+import { Canvas as FabricCanvas } from 'fabric';
 import { DrillData } from '@/types/drill';
 
 interface DrillProjectionProps {
@@ -14,6 +15,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState<'black' | 'white' | 'green'>('black');
+  const [zoom, setZoom] = useState(1);
 
   const scaleAndCenterDrill = (projectionCanvas: FabricCanvas) => {
     const objects = projectionCanvas.getObjects();
@@ -38,9 +40,10 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     const contentHeight = maxY - minY;
     
     // Calculate scale to fit screen with 10% padding
-    const scaleX = (screenWidth * 0.9) / contentWidth;
-    const scaleY = (screenHeight * 0.9) / contentHeight;
-    const scale = Math.min(scaleX, scaleY);
+    const scaleX = (screenWidth * 0.8) / contentWidth;
+    const scaleY = (screenHeight * 0.8) / contentHeight;
+    const baseScale = Math.min(scaleX, scaleY);
+    const finalScale = baseScale * zoom;
     
     // Calculate center position
     const centerX = screenWidth / 2;
@@ -50,26 +53,25 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     
     // Apply scaling and centering to all objects
     objects.forEach(obj => {
-      // For circles, maintain aspect ratio by using uniform scaling
-      if (obj.type === 'circle') {
-        obj.scaleX = scale;
-        obj.scaleY = scale;
-        // Lock scaling to maintain circular shape
-        obj.lockScalingX = true;
-        obj.lockScalingY = true;
-      } else {
-        // For other objects, allow independent scaling
-        obj.scaleX = (obj.scaleX || 1) * scale;
-        obj.scaleY = (obj.scaleY || 1) * scale;
+      // Store original position and scale if not already stored
+      if (!obj.originalLeft) {
+        obj.originalLeft = obj.left;
+        obj.originalTop = obj.top;
+        obj.originalScaleX = obj.scaleX || 1;
+        obj.originalScaleY = obj.scaleY || 1;
       }
       
+      // Apply scaling
+      obj.scaleX = obj.originalScaleX * finalScale;
+      obj.scaleY = obj.originalScaleY * finalScale;
+      
       // Calculate new position relative to content center
-      const relativeX = obj.left - contentCenterX;
-      const relativeY = obj.top - contentCenterY;
+      const relativeX = obj.originalLeft - contentCenterX;
+      const relativeY = obj.originalTop - contentCenterY;
       
       // Position relative to screen center
-      obj.left = centerX + relativeX * scale;
-      obj.top = centerY + relativeY * scale;
+      obj.left = centerX + relativeX * finalScale;
+      obj.top = centerY + relativeY * finalScale;
       
       obj.setCoords();
     });
@@ -84,7 +86,9 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     const projectionCanvas = new FabricCanvas(canvasRef.current, {
       width: window.innerWidth,
       height: window.innerHeight,
-      backgroundColor: '#8B0000', // Pool table color
+      backgroundColor: '#8B0000',
+      selection: false,
+      interactive: false,
     });
 
     fabricCanvasRef.current = projectionCanvas;
@@ -126,7 +130,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       projectionCanvas.dispose();
     };
-  }, [drill]);
+  }, [drill, zoom]);
 
   useEffect(() => {
     if (fabricCanvasRef.current) {
@@ -136,6 +140,12 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
       fabricCanvasRef.current.renderAll();
     }
   }, [backgroundColor]);
+
+  useEffect(() => {
+    if (fabricCanvasRef.current) {
+      scaleAndCenterDrill(fabricCanvasRef.current);
+    }
+  }, [zoom]);
 
   // Handle keyboard events
   useEffect(() => {
@@ -148,6 +158,10 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         setBackgroundColor(prev => 
           prev === 'black' ? 'white' : prev === 'white' ? 'green' : 'black'
         );
+      } else if (e.key === '+' || e.key === '=') {
+        setZoom(prev => Math.min(prev + 0.1, 3));
+      } else if (e.key === '-') {
+        setZoom(prev => Math.max(prev - 0.1, 0.5));
       }
     };
 
@@ -178,6 +192,22 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   return (
     <div className={`fixed inset-0 z-50 ${getBackgroundClass()}`}>
       <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <Button
+          onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))}
+          className="bg-gray-600 hover:bg-gray-700 text-white"
+          size="sm"
+        >
+          <MinusIcon className="w-4 h-4" />
+        </Button>
+        
+        <Button
+          onClick={() => setZoom(prev => Math.min(prev + 0.1, 3))}
+          className="bg-gray-600 hover:bg-gray-700 text-white"
+          size="sm"
+        >
+          <PlusIcon className="w-4 h-4" />
+        </Button>
+        
         <Button
           onClick={() => setBackgroundColor(prev => 
             prev === 'black' ? 'white' : prev === 'white' ? 'green' : 'black'
@@ -217,7 +247,9 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
       <div className={`absolute bottom-4 left-4 text-sm ${backgroundColor === 'white' ? 'text-black' : 'text-white'}`}>
         <div className="font-medium">{drill.name}</div>
         <div className="text-xs opacity-75">{drill.description}</div>
-        <div className="text-xs opacity-50 mt-2">ESC: Exit • F: Fullscreen • B: Background</div>
+        <div className="text-xs opacity-50 mt-2">
+          ESC: Exit • F: Fullscreen • B: Background • +/-: Zoom ({Math.round(zoom * 100)}%)
+        </div>
       </div>
     </div>
   );
