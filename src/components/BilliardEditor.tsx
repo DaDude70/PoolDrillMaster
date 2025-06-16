@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Canvas as FabricCanvas } from 'fabric';
 import { Button } from '@/components/ui/button';
@@ -103,11 +102,13 @@ export const BilliardEditor = () => {
         const deltaX = e.e.clientX - lastPoint.x;
         const deltaY = e.e.clientY - lastPoint.y;
         
-        const vpt = fabricCanvas.viewportTransform!.slice();
-        vpt[4] += deltaX;
-        vpt[5] += deltaY;
-        
-        fabricCanvas.setViewportTransform(vpt);
+        const vpt = fabricCanvas.viewportTransform?.slice() || [1, 0, 0, 1, 0, 0];
+        // Ensure we have exactly 6 elements for TMat2D
+        if (vpt.length >= 6) {
+          vpt[4] += deltaX;
+          vpt[5] += deltaY;
+          fabricCanvas.setViewportTransform(vpt as [number, number, number, number, number, number]);
+        }
         lastPoint = { x: e.e.clientX, y: e.e.clientY };
       }
     };

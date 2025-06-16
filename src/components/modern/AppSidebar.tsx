@@ -54,8 +54,8 @@ export const AppSidebar = ({
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <ModernBallPalette
-              selectedBallNumber={selectedBallNumber}
-              onBallNumberChange={onBallNumberChange}
+              selectedNumber={selectedBallNumber}
+              onNumberChange={onBallNumberChange}
             />
           </SidebarGroupContent>
         </SidebarGroup>

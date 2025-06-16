@@ -58,11 +58,13 @@ export const CanvasControls = ({ canvas }: CanvasControlsProps) => {
     const deltaX = canvasCenterX - contentCenterX;
     const deltaY = canvasCenterY - contentCenterY;
     
-    // Apply translation
-    const vpt = canvas.viewportTransform!.slice();
-    vpt[4] = deltaX;
-    vpt[5] = deltaY;
-    canvas.setViewportTransform(vpt);
+    // Apply translation with proper TMat2D format
+    const vpt = canvas.viewportTransform?.slice() || [1, 0, 0, 1, 0, 0];
+    if (vpt.length >= 6) {
+      vpt[4] = deltaX;
+      vpt[5] = deltaY;
+      canvas.setViewportTransform(vpt as [number, number, number, number, number, number]);
+    }
     canvas.renderAll();
   };
 

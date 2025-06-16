@@ -1,9 +1,16 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Maximize, RotateCcw, MinusIcon, PlusIcon } from 'lucide-react';
-import { Canvas as FabricCanvas } from 'fabric';
+import { Canvas as FabricCanvas, FabricObject } from 'fabric';
 import { DrillData } from '@/types/drill';
+
+// Extend FabricObject to include our custom properties
+interface ExtendedFabricObject extends FabricObject {
+  originalLeft?: number;
+  originalTop?: number;
+  originalScaleX?: number;
+  originalScaleY?: number;
+}
 
 interface DrillProjectionProps {
   drill: DrillData;
@@ -18,7 +25,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   const [zoom, setZoom] = useState(1);
 
   const scaleAndCenterDrill = (projectionCanvas: FabricCanvas) => {
-    const objects = projectionCanvas.getObjects();
+    const objects = projectionCanvas.getObjects() as ExtendedFabricObject[];
     if (objects.length === 0) return;
 
     // Get current screen dimensions
@@ -62,12 +69,12 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
       }
       
       // Apply scaling
-      obj.scaleX = obj.originalScaleX * finalScale;
-      obj.scaleY = obj.originalScaleY * finalScale;
+      obj.scaleX = (obj.originalScaleX || 1) * finalScale;
+      obj.scaleY = (obj.originalScaleY || 1) * finalScale;
       
       // Calculate new position relative to content center
-      const relativeX = obj.originalLeft - contentCenterX;
-      const relativeY = obj.originalTop - contentCenterY;
+      const relativeX = (obj.originalLeft || 0) - contentCenterX;
+      const relativeY = (obj.originalTop || 0) - contentCenterY;
       
       // Position relative to screen center
       obj.left = centerX + relativeX * finalScale;
