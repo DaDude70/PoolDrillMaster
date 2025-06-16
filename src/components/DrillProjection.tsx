@@ -5,14 +5,6 @@ import { X, Maximize, RotateCcw, MinusIcon, PlusIcon } from 'lucide-react';
 import { Canvas as FabricCanvas, FabricObject } from 'fabric';
 import { DrillData } from '@/types/drill';
 
-// Extend FabricObject to include our custom properties
-interface ExtendedFabricObject extends FabricObject {
-  originalLeft?: number;
-  originalTop?: number;
-  originalScaleX?: number;
-  originalScaleY?: number;
-}
-
 interface DrillProjectionProps {
   drill: DrillData;
   onExit: () => void;
@@ -25,71 +17,30 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   const [backgroundColor, setBackgroundColor] = useState<'black' | 'white' | 'green'>('black');
   const [zoom, setZoom] = useState(1);
 
-  const scaleAndCenterDrill = (projectionCanvas: FabricCanvas) => {
-    const objects = projectionCanvas.getObjects() as ExtendedFabricObject[];
-    if (objects.length === 0) return;
+  // Original canvas dimensions from the editor
+  const ORIGINAL_WIDTH = 900;
+  const ORIGINAL_HEIGHT = 450;
 
-    // Get current screen dimensions
+  const updateProjectionView = (projectionCanvas: FabricCanvas) => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
     
-    // Store original positions and scales if not already stored
-    objects.forEach(obj => {
-      if (obj.originalLeft === undefined) {
-        obj.originalLeft = obj.left;
-        obj.originalTop = obj.top;
-        obj.originalScaleX = obj.scaleX || 1;
-        obj.originalScaleY = obj.scaleY || 1;
-      }
-    });
-    
-    // Calculate the bounding box of all objects in their original state
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    
-    objects.forEach(obj => {
-      const objLeft = obj.originalLeft || 0;
-      const objTop = obj.originalTop || 0;
-      const objWidth = (obj.width || 0) * (obj.originalScaleX || 1);
-      const objHeight = (obj.height || 0) * (obj.originalScaleY || 1);
-      
-      minX = Math.min(minX, objLeft - objWidth / 2);
-      minY = Math.min(minY, objTop - objHeight / 2);
-      maxX = Math.max(maxX, objLeft + objWidth / 2);
-      maxY = Math.max(maxY, objTop + objHeight / 2);
-    });
-    
-    const contentWidth = maxX - minX;
-    const contentHeight = maxY - minY;
-    const contentCenterX = minX + contentWidth / 2;
-    const contentCenterY = minY + contentHeight / 2;
-    
-    // Calculate scale to fit screen with padding
-    const padding = 0.9; // 90% of screen to leave some margin
-    const scaleX = (screenWidth * padding) / contentWidth;
-    const scaleY = (screenHeight * padding) / contentHeight;
-    const baseScale = Math.min(scaleX, scaleY, 2); // Cap at 2x to avoid too much enlargement
+    // Calculate the scale to fit the original canvas dimensions into the screen
+    const scaleX = screenWidth / ORIGINAL_WIDTH;
+    const scaleY = screenHeight / ORIGINAL_HEIGHT;
+    const baseScale = Math.min(scaleX, scaleY) * 0.9; // 90% to add padding
     const finalScale = baseScale * zoom;
     
-    // Calculate screen center
-    const screenCenterX = screenWidth / 2;
-    const screenCenterY = screenHeight / 2;
+    // Calculate the viewport transformation
+    const scaledWidth = ORIGINAL_WIDTH * finalScale;
+    const scaledHeight = ORIGINAL_HEIGHT * finalScale;
+    const offsetX = (screenWidth - scaledWidth) / 2;
+    const offsetY = (screenHeight - scaledHeight) / 2;
     
-    // Apply scaling and positioning to all objects
-    objects.forEach(obj => {
-      // Apply scaling relative to original scale
-      obj.scaleX = (obj.originalScaleX || 1) * finalScale;
-      obj.scaleY = (obj.originalScaleY || 1) * finalScale;
-      
-      // Calculate position relative to content center
-      const relativeX = (obj.originalLeft || 0) - contentCenterX;
-      const relativeY = (obj.originalTop || 0) - contentCenterY;
-      
-      // Position relative to screen center
-      obj.left = screenCenterX + relativeX * finalScale;
-      obj.top = screenCenterY + relativeY * finalScale;
-      
-      obj.setCoords();
-    });
+    // Apply viewport transformation to the entire canvas
+    projectionCanvas.setViewportTransform([
+      finalScale, 0, 0, finalScale, offsetX, offsetY
+    ]);
     
     projectionCanvas.renderAll();
   };
@@ -101,7 +52,8 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     const projectionCanvas = new FabricCanvas(canvasRef.current, {
       width: window.innerWidth,
       height: window.innerHeight,
-      backgroundColor: '#8B0000',
+      backgroundColor: backgroundColor === 'black' ? '#000000' : 
+                     backgroundColor === 'white' ? '#ffffff' : '#1f4e3d',
       selection: false,
       interactive: false,
     });
@@ -111,9 +63,9 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     // Load the drill data
     if (drill.canvasData) {
       projectionCanvas.loadFromJSON(drill.canvasData, () => {
-        // Small delay to ensure objects are properly loaded
+        // Update the projection view after loading
         setTimeout(() => {
-          scaleAndCenterDrill(projectionCanvas);
+          updateProjectionView(projectionCanvas);
         }, 100);
       });
     }
@@ -124,22 +76,10 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         height: window.innerHeight
       });
       
-      // Reset original positions and rescale after resize
-      const objects = projectionCanvas.getObjects() as ExtendedFabricObject[];
-      objects.forEach(obj => {
-        obj.originalLeft = undefined;
-        obj.originalTop = undefined;
-        obj.originalScaleX = undefined;
-        obj.originalScaleY = undefined;
-      });
-      
-      if (drill.canvasData) {
-        projectionCanvas.loadFromJSON(drill.canvasData, () => {
-          setTimeout(() => {
-            scaleAndCenterDrill(projectionCanvas);
-          }, 100);
-        });
-      }
+      // Reapply the viewport transformation after resize
+      setTimeout(() => {
+        updateProjectionView(projectionCanvas);
+      }, 100);
     };
 
     const handleFullscreenChange = () => {
@@ -173,7 +113,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
 
   useEffect(() => {
     if (fabricCanvasRef.current) {
-      scaleAndCenterDrill(fabricCanvasRef.current);
+      updateProjectionView(fabricCanvasRef.current);
     }
   }, [zoom]);
 
