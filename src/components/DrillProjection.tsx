@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Maximize, RotateCcw, MinusIcon, PlusIcon } from 'lucide-react';
@@ -32,53 +33,60 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
     
-    // Calculate the bounding box of all objects
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    
+    // Store original positions and scales if not already stored
     objects.forEach(obj => {
-      const bounds = obj.getBoundingRect();
-      minX = Math.min(minX, bounds.left);
-      minY = Math.min(minY, bounds.top);
-      maxX = Math.max(maxX, bounds.left + bounds.width);
-      maxY = Math.max(maxY, bounds.top + bounds.height);
-    });
-    
-    const contentWidth = maxX - minX;
-    const contentHeight = maxY - minY;
-    
-    // Calculate scale to fit screen with 10% padding
-    const scaleX = (screenWidth * 0.8) / contentWidth;
-    const scaleY = (screenHeight * 0.8) / contentHeight;
-    const baseScale = Math.min(scaleX, scaleY);
-    const finalScale = baseScale * zoom;
-    
-    // Calculate center position
-    const centerX = screenWidth / 2;
-    const centerY = screenHeight / 2;
-    const contentCenterX = minX + contentWidth / 2;
-    const contentCenterY = minY + contentHeight / 2;
-    
-    // Apply scaling and centering to all objects
-    objects.forEach(obj => {
-      // Store original position and scale if not already stored
-      if (!obj.originalLeft) {
+      if (obj.originalLeft === undefined) {
         obj.originalLeft = obj.left;
         obj.originalTop = obj.top;
         obj.originalScaleX = obj.scaleX || 1;
         obj.originalScaleY = obj.scaleY || 1;
       }
+    });
+    
+    // Calculate the bounding box of all objects in their original state
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    
+    objects.forEach(obj => {
+      const objLeft = obj.originalLeft || 0;
+      const objTop = obj.originalTop || 0;
+      const objWidth = (obj.width || 0) * (obj.originalScaleX || 1);
+      const objHeight = (obj.height || 0) * (obj.originalScaleY || 1);
       
-      // Apply scaling
+      minX = Math.min(minX, objLeft - objWidth / 2);
+      minY = Math.min(minY, objTop - objHeight / 2);
+      maxX = Math.max(maxX, objLeft + objWidth / 2);
+      maxY = Math.max(maxY, objTop + objHeight / 2);
+    });
+    
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    const contentCenterX = minX + contentWidth / 2;
+    const contentCenterY = minY + contentHeight / 2;
+    
+    // Calculate scale to fit screen with padding
+    const padding = 0.9; // 90% of screen to leave some margin
+    const scaleX = (screenWidth * padding) / contentWidth;
+    const scaleY = (screenHeight * padding) / contentHeight;
+    const baseScale = Math.min(scaleX, scaleY, 2); // Cap at 2x to avoid too much enlargement
+    const finalScale = baseScale * zoom;
+    
+    // Calculate screen center
+    const screenCenterX = screenWidth / 2;
+    const screenCenterY = screenHeight / 2;
+    
+    // Apply scaling and positioning to all objects
+    objects.forEach(obj => {
+      // Apply scaling relative to original scale
       obj.scaleX = (obj.originalScaleX || 1) * finalScale;
       obj.scaleY = (obj.originalScaleY || 1) * finalScale;
       
-      // Calculate new position relative to content center
+      // Calculate position relative to content center
       const relativeX = (obj.originalLeft || 0) - contentCenterX;
       const relativeY = (obj.originalTop || 0) - contentCenterY;
       
       // Position relative to screen center
-      obj.left = centerX + relativeX * finalScale;
-      obj.top = centerY + relativeY * finalScale;
+      obj.left = screenCenterX + relativeX * finalScale;
+      obj.top = screenCenterY + relativeY * finalScale;
       
       obj.setCoords();
     });
@@ -103,7 +111,10 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     // Load the drill data
     if (drill.canvasData) {
       projectionCanvas.loadFromJSON(drill.canvasData, () => {
-        scaleAndCenterDrill(projectionCanvas);
+        // Small delay to ensure objects are properly loaded
+        setTimeout(() => {
+          scaleAndCenterDrill(projectionCanvas);
+        }, 100);
       });
     }
 
@@ -113,9 +124,21 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         height: window.innerHeight
       });
       
-      // Rescale and recenter after resize
+      // Reset original positions and rescale after resize
+      const objects = projectionCanvas.getObjects() as ExtendedFabricObject[];
+      objects.forEach(obj => {
+        obj.originalLeft = undefined;
+        obj.originalTop = undefined;
+        obj.originalScaleX = undefined;
+        obj.originalScaleY = undefined;
+      });
+      
       if (drill.canvasData) {
-        scaleAndCenterDrill(projectionCanvas);
+        projectionCanvas.loadFromJSON(drill.canvasData, () => {
+          setTimeout(() => {
+            scaleAndCenterDrill(projectionCanvas);
+          }, 100);
+        });
       }
     };
 
@@ -137,7 +160,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       projectionCanvas.dispose();
     };
-  }, [drill, zoom]);
+  }, [drill]);
 
   useEffect(() => {
     if (fabricCanvasRef.current) {
