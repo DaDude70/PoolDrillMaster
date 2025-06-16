@@ -3,18 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { Canvas as FabricCanvas } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { BallPalette } from './BallPalette';
-import { ToolPalette } from './ToolPalette';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DrillProjection } from './DrillProjection';
-import { DrillManager } from './DrillManager';
 import { SaveDrillDialog } from './SaveDrillDialog';
 import { CanvasHandler } from './CanvasHandler';
 import { CanvasControls } from './CanvasControls';
 import { BallCreator } from './BallCreator';
 import { ShapeCreator } from './ShapeCreator';
 import { TrainingAidCreator } from './TrainingAidCreator';
-import { Monitor, Edit3, Save, FolderOpen } from 'lucide-react';
+import { FloatingToolbar } from './modern/FloatingToolbar';
+import { AppSidebar } from './modern/AppSidebar';
+import { ThemeToggle } from './modern/ThemeToggle';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { DrillData } from '@/types/drill';
+import { Monitor, Settings } from 'lucide-react';
 
 export type Tool = 'select' | 'ball' | 'straightLine' | 'circle' | 'rectangle' | 'alignmentTool' | 'trainingAid';
 
@@ -27,10 +29,40 @@ export const BilliardEditor = () => {
   const [lineStartPoint, setLineStartPoint] = useState<{x: number, y: number} | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDrillManager, setShowDrillManager] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   // Canvas dimensions matching pool table proportions (9-foot table)
   const canvasWidth = 900;
   const canvasHeight = 450;
+
+  // Keyboard shortcuts
+  const shortcuts = [
+    { key: 'v', callback: () => setActiveTool('select'), description: 'Select tool' },
+    { key: 'b', callback: () => setActiveTool('ball'), description: 'Ball tool' },
+    { key: 'l', callback: () => setActiveTool('straightLine'), description: 'Line tool' },
+    { key: 'c', callback: () => setActiveTool('circle'), description: 'Circle tool' },
+    { key: 'r', callback: () => setActiveTool('rectangle'), description: 'Rectangle tool' },
+    { key: 'a', callback: () => setActiveTool('alignmentTool'), description: 'Alignment tool' },
+    { key: 't', callback: () => setActiveTool('trainingAid'), description: 'Training aid tool' },
+    { key: 's', ctrlKey: true, callback: () => setShowSaveDialog(true), description: 'Save drill' },
+    { key: 'o', ctrlKey: true, callback: () => setShowDrillManager(!showDrillManager), description: 'Open library' },
+    { key: 'z', ctrlKey: true, callback: () => handleUndo(), description: 'Undo' },
+    { key: 'y', ctrlKey: true, callback: () => handleRedo(), description: 'Redo' },
+  ];
+
+  useKeyboardShortcuts(shortcuts);
+
+  // Mock undo/redo handlers - you can implement proper history management
+  const handleUndo = () => {
+    // TODO: Implement proper undo functionality
+    console.log('Undo action');
+  };
+
+  const handleRedo = () => {
+    // TODO: Implement proper redo functionality
+    console.log('Redo action');
+  };
 
   useEffect(() => {
     if (!fabricCanvas) return;
@@ -107,84 +139,93 @@ export const BilliardEditor = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Pool Training Drill Editor</h1>
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => setShowSaveDialog(true)}
-              variant="outline"
-              size="sm"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Drill
-            </Button>
-            <Button 
-              onClick={() => setShowDrillManager(!showDrillManager)}
-              variant="outline"
-              size="sm"
-            >
-              <FolderOpen className="w-4 h-4 mr-2" />
-              Drill Library
-            </Button>
-            <CanvasControls canvas={fabricCanvas} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1 space-y-4">
-            {showDrillManager ? (
-              <DrillManager
-                onSelectDrill={handleSelectDrill}
-                onProjectDrill={handleProjectDrill}
-                onNewDrill={handleNewDrill}
-              />
-            ) : (
-              <>
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-3 flex items-center">
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Tools
-                  </h3>
-                  <ToolPalette activeTool={activeTool} onToolChange={setActiveTool} />
-                </Card>
-
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-3">Balls</h3>
-                  <BallPalette 
-                    selectedNumber={selectedBallNumber}
-                    onNumberChange={setSelectedBallNumber}
-                  />
-                </Card>
-
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-3">Instructions</h3>
-                  <div className="text-sm text-gray-600 space-y-2">
-                    <p>• Select a tool and click on the table</p>
-                    <p>• For straight lines: click start, then end point</p>
-                    <p>• Save your drills to the library</p>
-                    <p>• Project drills for teaching and practice</p>
-                    <p>• Use bright colors for projection visibility</p>
-                  </div>
-                </Card>
-              </>
-            )}
-          </div>
-
-          <div className="lg:col-span-3">
-            <Card className="p-4">
-              <div className="flex justify-center">
-                <CanvasHandler 
-                  onCanvasReady={setFabricCanvas}
-                  canvasWidth={canvasWidth}
-                  canvasHeight={canvasHeight}
-                />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar
+            selectedBallNumber={selectedBallNumber}
+            onBallNumberChange={setSelectedBallNumber}
+            showDrillManager={showDrillManager}
+            onSelectDrill={handleSelectDrill}
+            onProjectDrill={handleProjectDrill}
+            onNewDrill={handleNewDrill}
+          />
+          
+          <SidebarInset className="flex-1">
+            {/* Header */}
+            <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-lg">
+              <div className="flex h-14 items-center justify-between px-4">
+                <div className="flex items-center gap-2">
+                  <SidebarTrigger className="h-8 w-8" />
+                  <div className="h-6 w-px bg-border/50" />
+                  <h1 className="text-lg font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    Pool Training Studio
+                  </h1>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => setShowDrillManager(!showDrillManager)}
+                    variant={showDrillManager ? "default" : "outline"}
+                    size="sm"
+                    className="transition-all duration-200"
+                  >
+                    <Monitor className="w-4 h-4 mr-2" />
+                    {showDrillManager ? 'Hide Library' : 'Show Library'}
+                  </Button>
+                  
+                  <CanvasControls canvas={fabricCanvas} />
+                  <ThemeToggle />
+                  
+                  <Button variant="outline" size="sm">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-            </Card>
-          </div>
+            </header>
+
+            {/* Floating Toolbar */}
+            <FloatingToolbar
+              activeTool={activeTool}
+              onToolChange={setActiveTool}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onSave={() => setShowSaveDialog(true)}
+              onOpenLibrary={() => setShowDrillManager(!showDrillManager)}
+              onProject={() => {
+                // TODO: Implement current drill projection
+                console.log('Project current drill');
+              }}
+              canUndo={canUndo}
+              canRedo={canRedo}
+            />
+
+            {/* Main Canvas Area */}
+            <main className="flex-1 p-6">
+              <Card className="mx-auto max-w-fit bg-background/60 backdrop-blur-sm border-border/50 shadow-2xl">
+                <div className="p-6">
+                  <div className="relative">
+                    <CanvasHandler 
+                      onCanvasReady={setFabricCanvas}
+                      canvasWidth={canvasWidth}
+                      canvasHeight={canvasHeight}
+                    />
+                    
+                    {/* Canvas overlay for line drawing feedback */}
+                    {isDrawingLine && lineStartPoint && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                          Click to finish line
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </main>
+          </SidebarInset>
         </div>
-      </div>
+      </SidebarProvider>
 
       <SaveDrillDialog
         isOpen={showSaveDialog}
