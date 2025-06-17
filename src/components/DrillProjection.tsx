@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Maximize, RotateCcw, MinusIcon, PlusIcon, Eye, EyeOff } from 'lucide-react';
@@ -13,7 +14,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [backgroundColor, setBackgroundColor] = useState<'black' | 'white' | 'green'>('black');
+  const [backgroundColor, setBackgroundColor] = useState<'black' | 'white' | 'green' | 'transparent'>('black');
   const [zoom, setZoom] = useState(1);
   const [cleanView, setCleanView] = useState(false);
 
@@ -103,7 +104,9 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
       width: window.innerWidth,
       height: window.innerHeight,
       backgroundColor: backgroundColor === 'black' ? '#000000' : 
-                     backgroundColor === 'white' ? '#ffffff' : '#1f4e3d',
+                     backgroundColor === 'white' ? '#ffffff' : 
+                     backgroundColor === 'green' ? '#1f4e3d' : 
+                     'transparent',
       selection: false,
       interactive: false,
     });
@@ -158,7 +161,9 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   useEffect(() => {
     if (fabricCanvasRef.current) {
       const bgColor = backgroundColor === 'black' ? '#000000' : 
-                     backgroundColor === 'white' ? '#ffffff' : '#1f4e3d';
+                     backgroundColor === 'white' ? '#ffffff' : 
+                     backgroundColor === 'green' ? '#1f4e3d' : 
+                     'transparent';
       fabricCanvasRef.current.backgroundColor = bgColor;
       fabricCanvasRef.current.renderAll();
     }
@@ -185,7 +190,9 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         toggleFullscreen();
       } else if (e.key === 'b' || e.key === 'B') {
         setBackgroundColor(prev => 
-          prev === 'black' ? 'white' : prev === 'white' ? 'green' : 'black'
+          prev === 'black' ? 'white' : 
+          prev === 'white' ? 'green' : 
+          prev === 'green' ? 'transparent' : 'black'
         );
       } else if (e.key === '+' || e.key === '=') {
         setZoom(prev => Math.min(prev + 0.1, 3));
@@ -216,7 +223,18 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     switch (backgroundColor) {
       case 'white': return 'bg-white';
       case 'green': return 'bg-green-800';
+      case 'transparent': return 'bg-transparent';
       default: return 'bg-black';
+    }
+  };
+
+  const getBackgroundLabel = () => {
+    switch (backgroundColor) {
+      case 'black': return 'Black';
+      case 'white': return 'White';
+      case 'green': return 'Green';
+      case 'transparent': return 'Clear';
+      default: return 'Black';
     }
   };
 
@@ -250,13 +268,15 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         
         <Button
           onClick={() => setBackgroundColor(prev => 
-            prev === 'black' ? 'white' : prev === 'white' ? 'green' : 'black'
+            prev === 'black' ? 'white' : 
+            prev === 'white' ? 'green' : 
+            prev === 'green' ? 'transparent' : 'black'
           )}
           className="bg-gray-600 hover:bg-gray-700 text-white"
           size="sm"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
-          {backgroundColor === 'black' ? 'Black' : backgroundColor === 'white' ? 'White' : 'Green'}
+          {getBackgroundLabel()}
         </Button>
         
         <Button
