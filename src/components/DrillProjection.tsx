@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Maximize, RotateCcw, MinusIcon, PlusIcon } from 'lucide-react';
+import { X, Maximize, RotateCcw, MinusIcon, PlusIcon, Eye, EyeOff } from 'lucide-react';
 import { Canvas as FabricCanvas, FabricObject } from 'fabric';
 import { DrillData } from '@/types/drill';
 
@@ -16,10 +16,57 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState<'black' | 'white' | 'green'>('black');
   const [zoom, setZoom] = useState(1);
+  const [cleanView, setCleanView] = useState(false);
 
   // Original canvas dimensions from the editor
   const ORIGINAL_WIDTH = 900;
   const ORIGINAL_HEIGHT = 450;
+
+  const convertObjectsToTurquoise = (canvas: FabricCanvas) => {
+    const turquoise = '#00CED1';
+    
+    canvas.getObjects().forEach((obj: FabricObject) => {
+      // Skip billiard table background elements
+      if (obj.name === 'billiard-table' || obj.name === 'table-felt') {
+        if (cleanView) {
+          obj.visible = false;
+        } else {
+          obj.visible = true;
+        }
+        return;
+      }
+
+      // Make object visible and set turquoise color
+      obj.visible = true;
+      
+      if (obj.type === 'circle' || obj.type === 'rect' || obj.type === 'polygon') {
+        obj.set({
+          fill: turquoise,
+          stroke: turquoise,
+        });
+      } else if (obj.type === 'line' || obj.type === 'path') {
+        obj.set({
+          stroke: turquoise,
+          strokeWidth: Math.max(obj.strokeWidth || 2, 3), // Make lines more visible
+        });
+      } else if (obj.type === 'text' || obj.type === 'i-text') {
+        obj.set({
+          fill: turquoise,
+          stroke: turquoise,
+        });
+      } else if (obj.type === 'group') {
+        // Handle grouped objects
+        (obj as any).getObjects().forEach((groupObj: FabricObject) => {
+          groupObj.set({
+            fill: turquoise,
+            stroke: turquoise,
+          });
+        });
+      }
+    });
+    
+    canvas.renderAll();
+  };
 
   const updateProjectionView = (projectionCanvas: FabricCanvas) => {
     const screenWidth = window.innerWidth;
@@ -63,6 +110,9 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     // Load the drill data
     if (drill.canvasData) {
       projectionCanvas.loadFromJSON(drill.canvasData, () => {
+        // Convert objects to turquoise and handle clean view
+        convertObjectsToTurquoise(projectionCanvas);
+        
         // Update the projection view after loading
         setTimeout(() => {
           updateProjectionView(projectionCanvas);
@@ -100,7 +150,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       projectionCanvas.dispose();
     };
-  }, [drill]);
+  }, [drill, cleanView]);
 
   useEffect(() => {
     if (fabricCanvasRef.current) {
@@ -117,6 +167,12 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     }
   }, [zoom]);
 
+  useEffect(() => {
+    if (fabricCanvasRef.current) {
+      convertObjectsToTurquoise(fabricCanvasRef.current);
+    }
+  }, [cleanView]);
+
   // Handle keyboard events
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -132,6 +188,8 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         setZoom(prev => Math.min(prev + 0.1, 3));
       } else if (e.key === '-') {
         setZoom(prev => Math.max(prev - 0.1, 0.5));
+      } else if (e.key === 'c' || e.key === 'C') {
+        setCleanView(prev => !prev);
       }
     };
 
@@ -162,6 +220,15 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
   return (
     <div className={`fixed inset-0 z-50 ${getBackgroundClass()}`}>
       <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <Button
+          onClick={() => setCleanView(prev => !prev)}
+          className="bg-purple-600 hover:bg-purple-700 text-white"
+          size="sm"
+        >
+          {cleanView ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
+          {cleanView ? 'Show' : 'Hide'} Table
+        </Button>
+        
         <Button
           onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))}
           className="bg-gray-600 hover:bg-gray-700 text-white"
@@ -218,7 +285,7 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
         <div className="font-medium">{drill.name}</div>
         <div className="text-xs opacity-75">{drill.description}</div>
         <div className="text-xs opacity-50 mt-2">
-          ESC: Exit • F: Fullscreen • B: Background • +/-: Zoom ({Math.round(zoom * 100)}%)
+          ESC: Exit • F: Fullscreen • B: Background • C: Clean View • +/-: Zoom ({Math.round(zoom * 100)}%)
         </div>
       </div>
     </div>

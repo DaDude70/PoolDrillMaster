@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DrillData } from '@/types/drill';
-import { useDrillStorage } from '@/hooks/useDrillStorage';
-import { Play, Trash2, Search, Plus } from 'lucide-react';
+import { useSupabaseDrillStorage } from '@/hooks/useSupabaseDrillStorage';
+import { useAuth } from '@/hooks/useAuth';
+import { Play, Trash2, Search, Plus, LogIn } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AuthDialog } from '@/components/auth/AuthDialog';
 
 interface DrillLibraryProps {
   onSelectDrill: (drill: DrillData) => void;
@@ -17,9 +19,11 @@ interface DrillLibraryProps {
 }
 
 export const DrillLibrary = ({ onSelectDrill, onProjectDrill, onNewDrill }: DrillLibraryProps) => {
-  const { drills, isLoading, deleteDrill } = useDrillStorage();
+  const { drills, isLoading, deleteDrill } = useSupabaseDrillStorage();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const filteredDrills = drills.filter(drill => {
     const matchesSearch = drill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,6 +53,29 @@ export const DrillLibrary = ({ onSelectDrill, onProjectDrill, onNewDrill }: Dril
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
+
+  if (!user) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="p-4 border-b border-border/50">
+          <h3 className="text-lg font-semibold mb-4">Drill Library</h3>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center space-y-4">
+            <div className="text-muted-foreground">
+              <p className="text-sm">Sign in to save and access your drills</p>
+              <p className="text-xs mt-1 opacity-75">Create an account to store drills permanently</p>
+            </div>
+            <Button onClick={() => setShowAuthDialog(true)} size="sm">
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
+          </div>
+        </div>
+        <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

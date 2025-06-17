@@ -7,15 +7,15 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { ModernBallPalette } from './ModernBallPalette';
 import { DrillLibrary } from './DrillLibrary';
 import { DrillData } from '@/types/drill';
 import { Separator } from '@/components/ui/separator';
-import { Palette, Library } from 'lucide-react';
+import { Palette, Library, LogOut, User } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
 
 interface AppSidebarProps {
   selectedBallNumber: number;
@@ -32,6 +32,8 @@ export const AppSidebar = ({
   onProjectDrill,
   onNewDrill,
 }: AppSidebarProps) => {
+  const { user, signOut } = useAuth();
+
   return (
     <Sidebar className="border-r border-border/40 bg-background/60 backdrop-blur-lg">
       <SidebarHeader className="border-b border-border/40 p-4">
@@ -76,6 +78,27 @@ export const AppSidebar = ({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {user && (
+        <SidebarFooter className="border-t border-border/40 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs text-muted-foreground truncate">
+                {user.email}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={signOut}
+              className="h-6 w-6 p-0 hover:bg-red-500/10 hover:text-red-600"
+            >
+              <LogOut className="w-3 h-3" />
+            </Button>
+          </div>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 };
