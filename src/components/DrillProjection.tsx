@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Maximize, RotateCcw, MinusIcon, PlusIcon, Eye, EyeOff } from 'lucide-react';
@@ -26,8 +25,12 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     const turquoise = '#00CED1';
     
     canvas.getObjects().forEach((obj: FabricObject) => {
-      // Skip billiard table background elements
-      if (obj.name === 'billiard-table' || obj.name === 'table-felt') {
+      // Skip billiard table background elements by checking custom data or object properties
+      const objData = (obj as any).data || {};
+      const isBilliardTable = objData.type === 'billiard-table' || objData.type === 'table-felt' || 
+                              (obj.fill === '#8B0000' && obj.width === 900 && obj.height === 450);
+      
+      if (isBilliardTable) {
         if (cleanView) {
           obj.visible = false;
         } else {
