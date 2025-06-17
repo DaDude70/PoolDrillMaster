@@ -25,22 +25,22 @@ export const DrillProjection = ({ drill, onExit }: DrillProjectionProps) => {
     const turquoise = '#00CED1';
     
     canvas.getObjects().forEach((obj: FabricObject) => {
-      // Skip billiard table background elements by checking custom data or object properties
+      // Check if this is a billiard table background element
       const objData = (obj as any).data || {};
-      const isBilliardTable = objData.type === 'billiard-table' || objData.type === 'table-felt' || 
-                              (obj.fill === '#8B0000' && obj.width === 900 && obj.height === 450);
+      const isBilliardTable = objData.type === 'billiard-table' || 
+                              objData.type === 'table-felt' ||
+                              (obj.fill === '#8B0000' && obj.width === 900 && obj.height === 450) ||
+                              (obj.fill === '#228B22' && obj.width === 800 && obj.height === 400) ||
+                              (obj.type === 'rect' && obj.width >= 800 && obj.height >= 400);
       
       if (isBilliardTable) {
-        if (cleanView) {
-          obj.visible = false;
-        } else {
-          obj.visible = true;
-        }
+        // Hide or show table based on cleanView setting
+        obj.set('visible', !cleanView);
         return;
       }
 
-      // Make object visible and set turquoise color
-      obj.visible = true;
+      // For all non-table objects, make them visible and turquoise
+      obj.set('visible', true);
       
       if (obj.type === 'circle' || obj.type === 'rect' || obj.type === 'polygon') {
         obj.set({
