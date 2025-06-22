@@ -1,5 +1,5 @@
+
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
   MousePointer, 
@@ -17,7 +17,7 @@ import {
   CircleDot
 } from 'lucide-react';
 import { Tool } from '@/components/BilliardEditor';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ToolButton } from './ToolButton';
 
 interface FloatingToolbarProps {
   activeTool: Tool;
@@ -57,142 +57,60 @@ export const FloatingToolbar = ({
   ];
 
   return (
-    <Card className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-background/80 backdrop-blur-lg border-border/50 shadow-2xl">
-      <div className="flex items-center gap-1 p-2 max-w-[90vw] overflow-x-auto">
+    <Card className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-background/90 backdrop-blur-xl border-border/60 shadow-2xl animate-fade-in">
+      <div className="flex items-center gap-2 p-3 max-w-[90vw] overflow-x-auto scrollbar-thin">
         {/* Tool Selection */}
-        <div className="flex items-center gap-1 pr-2 border-r border-border/30 min-w-0">
-          {tools.map((tool) => {
-            const Icon = tool.icon;
-            const isActive = activeTool === tool.id;
-            
-            return (
-              <Tooltip key={tool.id}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={isActive ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => onToolChange(tool.id)}
-                    className={`h-9 w-9 p-0 transition-all duration-200 shrink-0 ${
-                      isActive 
-                        ? 'scale-105 shadow-md' 
-                        : 'hover:scale-105 hover:bg-accent/50'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="text-center">
-                    <div className="font-medium">{tool.label}</div>
-                    <div className="text-xs text-muted-foreground">Press {tool.shortcut}</div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
+        <div className="flex items-center gap-1 pr-3 border-r border-border/40 min-w-0">
+          {tools.map((tool) => (
+            <ToolButton
+              key={tool.id}
+              icon={tool.icon}
+              label={tool.label}
+              shortcut={tool.shortcut}
+              isActive={activeTool === tool.id}
+              onClick={() => onToolChange(tool.id)}
+            />
+          ))}
         </div>
 
         {/* History Controls */}
-        <div className="flex items-center gap-1 px-2 border-r border-border/30">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onUndo}
-                disabled={!canUndo}
-                className="h-9 w-9 p-0 transition-all duration-200 hover:scale-105"
-              >
-                <Undo className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-center">
-                <div className="font-medium">Undo</div>
-                <div className="text-xs text-muted-foreground">Ctrl+Z</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onRedo}
-                disabled={!canRedo}
-                className="h-9 w-9 p-0 transition-all duration-200 hover:scale-105"
-              >
-                <Redo className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-center">
-                <div className="font-medium">Redo</div>
-                <div className="text-xs text-muted-foreground">Ctrl+Y</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
+        <div className="flex items-center gap-1 px-3 border-r border-border/40">
+          <ToolButton
+            icon={Undo}
+            label="Undo"
+            shortcut="Ctrl+Z"
+            onClick={onUndo || (() => {})}
+            disabled={!canUndo}
+          />
+          <ToolButton
+            icon={Redo}
+            label="Redo"
+            shortcut="Ctrl+Y"
+            onClick={onRedo || (() => {})}
+            disabled={!canRedo}
+          />
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-1 pl-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onSave}
-                className="h-9 w-9 p-0 transition-all duration-200 hover:scale-105"
-              >
-                <Save className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-center">
-                <div className="font-medium">Save Drill</div>
-                <div className="text-xs text-muted-foreground">Ctrl+S</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onOpenLibrary}
-                className="h-9 w-9 p-0 transition-all duration-200 hover:scale-105"
-              >
-                <FolderOpen className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-center">
-                <div className="font-medium">Drill Library</div>
-                <div className="text-xs text-muted-foreground">Ctrl+O</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onProject}
-                className="h-9 w-9 p-0 transition-all duration-200 hover:scale-105"
-              >
-                <Play className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-center">
-                <div className="font-medium">Project Mode</div>
-                <div className="text-xs text-muted-foreground">Ctrl+P</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
+        <div className="flex items-center gap-1 pl-3">
+          <ToolButton
+            icon={Save}
+            label="Save Drill"
+            shortcut="Ctrl+S"
+            onClick={onSave || (() => {})}
+          />
+          <ToolButton
+            icon={FolderOpen}
+            label="Drill Library"
+            shortcut="Ctrl+O"
+            onClick={onOpenLibrary || (() => {})}
+          />
+          <ToolButton
+            icon={Play}
+            label="Project Mode"
+            shortcut="Ctrl+P"
+            onClick={onProject || (() => {})}
+          />
         </div>
       </div>
     </Card>

@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { MousePointer, Circle, Square, Minus, Ruler, Target, ArrowUpRight, CircleDot } from 'lucide-react';
 import { Tool } from './BilliardEditor';
+import { ToolButton } from './modern/ToolButton';
 
 interface ToolPaletteProps {
   activeTool: Tool;
@@ -25,22 +25,22 @@ export const ToolPalette = ({ activeTool, onToolChange }: ToolPaletteProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-2">
-      {tools.map((tool) => {
-        const Icon = tool.icon;
-        return (
-          <Button
-            key={tool.id}
-            variant={activeTool === tool.id ? "default" : "outline"}
-            size="sm"
+    <div className="grid grid-cols-2 gap-3 p-2">
+      {tools.map((tool) => (
+        <div key={tool.id} className="flex flex-col items-center">
+          <ToolButton
+            icon={tool.icon}
+            label={tool.label}
+            isActive={activeTool === tool.id}
             onClick={() => onToolChange(tool.id)}
-            className="flex flex-col items-center justify-center h-16 p-2"
-          >
-            <Icon className="w-4 h-4 mb-1" />
-            <span className="text-xs">{tool.label}</span>
-          </Button>
-        );
-      })}
+            size="icon"
+            variant="outline"
+          />
+          <span className="text-xs text-muted-foreground mt-1 text-center leading-tight">
+            {tool.label}
+          </span>
+        </div>
+      ))}
     </div>
   );
 };

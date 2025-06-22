@@ -107,6 +107,48 @@
     @apply bg-black/10 backdrop-blur-md border border-white/10;
   }
 
+  /* 3D Button Effects */
+  .btn-3d {
+    @apply relative transform transition-all duration-150 ease-in-out;
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.1),
+      0 2px 4px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .btn-3d:hover {
+    @apply -translate-y-0.5;
+    box-shadow: 
+      0 6px 12px rgba(0, 0, 0, 0.15),
+      0 3px 6px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  
+  .btn-3d:active {
+    @apply translate-y-0;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  
+  .btn-3d-active {
+    @apply bg-gradient-to-b from-primary to-primary/90;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.2),
+      0 1px 2px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-3d-ghost {
+    @apply bg-gradient-to-b from-muted/50 to-muted/30 border border-border/50;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.05),
+      0 1px 2px rgba(0, 0, 0, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
   /* Smooth animations */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
