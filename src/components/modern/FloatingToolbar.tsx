@@ -13,7 +13,10 @@ import {
   Redo,
   Save,
   FolderOpen,
-  Play
+  Play,
+  ArrowUpRight,
+  Hash,
+  CircleDot
 } from 'lucide-react';
 import { Tool } from '@/components/BilliardEditor';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -45,17 +48,22 @@ export const FloatingToolbar = ({
     { id: 'select' as Tool, label: 'Select', icon: MousePointer, shortcut: 'V' },
     { id: 'ball' as Tool, label: 'Place Ball', icon: Circle, shortcut: 'B' },
     { id: 'straightLine' as Tool, label: 'Line', icon: Minus, shortcut: 'L' },
+    { id: 'arrowLine' as Tool, label: 'Arrow Line', icon: ArrowUpRight, shortcut: 'Shift+L' },
     { id: 'circle' as Tool, label: 'Circle', icon: Circle, shortcut: 'C' },
     { id: 'rectangle' as Tool, label: 'Rectangle', icon: Square, shortcut: 'R' },
     { id: 'alignmentTool' as Tool, label: 'Alignment', icon: Ruler, shortcut: 'A' },
-    { id: 'trainingAid' as Tool, label: 'Training Aid', icon: Target, shortcut: 'T' },
+    { id: 'trainingAid' as Tool, label: 'Training Aid (3)', icon: Target, shortcut: 'T' },
+    { id: 'trainingAid4' as Tool, label: 'Training Aid (4)', icon: Target, shortcut: '4' },
+    { id: 'trainingAid5' as Tool, label: 'Training Aid (5)', icon: Target, shortcut: '5' },
+    { id: 'targetCircle' as Tool, label: 'Target Circle', icon: CircleDot, shortcut: 'G' },
+    { id: 'ballNumber' as Tool, label: 'Ball Number', icon: Hash, shortcut: 'N' },
   ];
 
   return (
     <Card className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-background/80 backdrop-blur-lg border-border/50 shadow-2xl">
-      <div className="flex items-center gap-1 p-2">
+      <div className="flex items-center gap-1 p-2 max-w-[90vw] overflow-x-auto">
         {/* Tool Selection */}
-        <div className="flex items-center gap-1 pr-2 border-r border-border/30">
+        <div className="flex items-center gap-1 pr-2 border-r border-border/30 min-w-0">
           {tools.map((tool) => {
             const Icon = tool.icon;
             const isActive = activeTool === tool.id;
@@ -67,7 +75,7 @@ export const FloatingToolbar = ({
                     variant={isActive ? "default" : "ghost"}
                     size="sm"
                     onClick={() => onToolChange(tool.id)}
-                    className={`h-9 w-9 p-0 transition-all duration-200 ${
+                    className={`h-9 w-9 p-0 transition-all duration-200 shrink-0 ${
                       isActive 
                         ? 'scale-105 shadow-md' 
                         : 'hover:scale-105 hover:bg-accent/50'

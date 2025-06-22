@@ -17,7 +17,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { DrillData } from '@/types/drill';
 import { Settings } from 'lucide-react';
 
-export type Tool = 'select' | 'ball' | 'straightLine' | 'circle' | 'rectangle' | 'alignmentTool' | 'trainingAid';
+export type Tool = 'select' | 'ball' | 'straightLine' | 'arrowLine' | 'circle' | 'rectangle' | 'alignmentTool' | 'trainingAid' | 'trainingAid4' | 'trainingAid5' | 'targetCircle' | 'ballNumber';
 
 export const BilliardEditor = () => {
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
@@ -39,10 +39,15 @@ export const BilliardEditor = () => {
     { key: 'v', callback: () => setActiveTool('select'), description: 'Select tool' },
     { key: 'b', callback: () => setActiveTool('ball'), description: 'Ball tool' },
     { key: 'l', callback: () => setActiveTool('straightLine'), description: 'Line tool' },
+    { key: 'shift+l', callback: () => setActiveTool('arrowLine'), description: 'Arrow line tool' },
     { key: 'c', callback: () => setActiveTool('circle'), description: 'Circle tool' },
     { key: 'r', callback: () => setActiveTool('rectangle'), description: 'Rectangle tool' },
     { key: 'a', callback: () => setActiveTool('alignmentTool'), description: 'Alignment tool' },
     { key: 't', callback: () => setActiveTool('trainingAid'), description: 'Training aid tool' },
+    { key: '4', callback: () => setActiveTool('trainingAid4'), description: 'Training aid 4 circles' },
+    { key: '5', callback: () => setActiveTool('trainingAid5'), description: 'Training aid 5 circles' },
+    { key: 'g', callback: () => setActiveTool('targetCircle'), description: 'Target circle' },
+    { key: 'n', callback: () => setActiveTool('ballNumber'), description: 'Ball number' },
     { key: 's', ctrlKey: true, callback: () => setShowSaveDialog(true), description: 'Save drill' },
     { key: 'z', ctrlKey: true, callback: () => handleUndo(), description: 'Undo' },
     { key: 'y', ctrlKey: true, callback: () => handleRedo(), description: 'Redo' },
@@ -149,6 +154,15 @@ export const BilliardEditor = () => {
         setIsDrawingLine(false);
         setLineStartPoint(null);
       }
+    } else if (activeTool === 'arrowLine') {
+      if (!isDrawingLine) {
+        setLineStartPoint({ x: pointer.x, y: pointer.y });
+        setIsDrawingLine(true);
+      } else {
+        ShapeCreator.createArrowLine(fabricCanvas, lineStartPoint!.x, lineStartPoint!.y, pointer.x, pointer.y);
+        setIsDrawingLine(false);
+        setLineStartPoint(null);
+      }
     } else if (activeTool === 'circle') {
       ShapeCreator.createCircle(fabricCanvas, pointer.x, pointer.y);
     } else if (activeTool === 'rectangle') {
@@ -157,6 +171,14 @@ export const BilliardEditor = () => {
       TrainingAidCreator.createAlignmentTool(fabricCanvas, pointer.x, pointer.y);
     } else if (activeTool === 'trainingAid') {
       TrainingAidCreator.createTrainingAid(fabricCanvas, pointer.x, pointer.y);
+    } else if (activeTool === 'trainingAid4') {
+      TrainingAidCreator.createTrainingAidFourCircles(fabricCanvas, pointer.x, pointer.y);
+    } else if (activeTool === 'trainingAid5') {
+      TrainingAidCreator.createTrainingAidFiveCircles(fabricCanvas, pointer.x, pointer.y);
+    } else if (activeTool === 'targetCircle') {
+      TrainingAidCreator.createTargetCircle(fabricCanvas, pointer.x, pointer.y);
+    } else if (activeTool === 'ballNumber') {
+      TrainingAidCreator.createBallNumber(fabricCanvas, pointer.x, pointer.y, selectedBallNumber);
     }
   };
 
@@ -261,7 +283,7 @@ export const BilliardEditor = () => {
                     {isDrawingLine && lineStartPoint && (
                       <div className="absolute inset-0 pointer-events-none">
                         <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm backdrop-blur-sm">
-                          Click to finish line
+                          {activeTool === 'arrowLine' ? 'Click to finish arrow' : 'Click to finish line'}
                         </div>
                       </div>
                     )}
