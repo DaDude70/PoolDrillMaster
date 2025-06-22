@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DrillData } from '@/types/drill';
 import { useDrillStorage } from '@/hooks/useDrillStorage';
-import { Play, Edit, Trash2, Plus, Search } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Play, Edit, Trash2, Plus, Search, Settings } from 'lucide-react';
+import { AdminPanel } from './AdminPanel';
 import { toast } from 'sonner';
 
 interface DrillManagerProps {
@@ -17,8 +19,25 @@ interface DrillManagerProps {
 
 export const DrillManager = ({ onSelectDrill, onProjectDrill, onNewDrill }: DrillManagerProps) => {
   const { drills, isLoading, deleteDrill } = useDrillStorage();
+  const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  if (showAdminPanel) {
+    return (
+      <div className="space-y-4">
+        <Button
+          onClick={() => setShowAdminPanel(false)}
+          variant="outline"
+          size="sm"
+        >
+          ← Back to Drills
+        </Button>
+        <AdminPanel />
+      </div>
+    );
+  }
 
   const filteredDrills = drills.filter(drill => {
     const matchesSearch = drill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,10 +71,23 @@ export const DrillManager = ({ onSelectDrill, onProjectDrill, onNewDrill }: Dril
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">Drill Library</h3>
-          <Button onClick={onNewDrill} size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            New Drill
-          </Button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button
+                onClick={() => setShowAdminPanel(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                Admin
+              </Button>
+            )}
+            <Button onClick={onNewDrill} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              New Drill
+            </Button>
+          </div>
         </div>
 
         <div className="flex gap-2">

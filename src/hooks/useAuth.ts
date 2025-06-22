@@ -4,15 +4,48 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface AuthUser extends User {
+  isAdmin?: boolean;
+}
+
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return false;
+      }
+
+      return data?.is_admin || false;
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+      return false;
+    }
+  };
+
+  const updateUserWithAdminStatus = async (authUser: User) => {
+    const isAdmin = await fetchUserProfile(authUser.id);
+    setUser({ ...authUser, isAdmin });
+  };
 
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        await updateUserWithAdminStatus(session.user);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     };
 
@@ -21,7 +54,11 @@ export const useAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
+        if (session?.user) {
+          await updateUserWithAdminStatus(session.user);
+        } else {
+          setUser(null);
+        }
         setLoading(false);
       }
     );
@@ -74,5 +111,6 @@ export const useAuth = () => {
     signUp,
     signIn,
     signOut,
+    isAdmin: user?.isAdmin || false,
   };
 };

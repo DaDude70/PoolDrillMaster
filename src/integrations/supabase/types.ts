@@ -58,18 +58,21 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_admin: boolean
           updated_at: string
         }
         Insert: {
           created_at?: string
           email?: string | null
           id: string
+          is_admin?: boolean
           updated_at?: string
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
+          is_admin?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -79,7 +82,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_user_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
