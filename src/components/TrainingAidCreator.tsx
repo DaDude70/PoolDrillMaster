@@ -1,5 +1,5 @@
 
-import { Rect, Circle, Line, Group, Polygon } from 'fabric';
+import { Rect, Circle, Line, Group, Polygon, Text } from 'fabric';
 import { Canvas as FabricCanvas } from 'fabric';
 
 export class TrainingAidCreator {
