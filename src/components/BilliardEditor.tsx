@@ -17,7 +17,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { DrillData } from '@/types/drill';
 import { Settings } from 'lucide-react';
 
-export type Tool = 'select' | 'ball' | 'straightLine' | 'arrowLine' | 'circle' | 'rectangle' | 'alignmentTool' | 'trainingAid' | 'trainingAid4' | 'trainingAid5' | 'targetCircle' | 'ballNumber';
+export type Tool = 'select' | 'ball' | 'straightLine' | 'arrowLine' | 'circle' | 'rectangle' | 'alignmentTool' | 'trainingAid' | 'trainingAid4' | 'trainingAid5' | 'targetCircle';
 
 export const BilliardEditor = () => {
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
@@ -47,7 +47,6 @@ export const BilliardEditor = () => {
     { key: '4', callback: () => setActiveTool('trainingAid4'), description: 'Training aid 4 circles' },
     { key: '5', callback: () => setActiveTool('trainingAid5'), description: 'Training aid 5 circles' },
     { key: 'g', callback: () => setActiveTool('targetCircle'), description: 'Target circle' },
-    { key: 'n', callback: () => setActiveTool('ballNumber'), description: 'Ball number' },
     { key: 's', ctrlKey: true, callback: () => setShowSaveDialog(true), description: 'Save drill' },
     { key: 'z', ctrlKey: true, callback: () => handleUndo(), description: 'Undo' },
     { key: 'y', ctrlKey: true, callback: () => handleRedo(), description: 'Redo' },
@@ -177,8 +176,6 @@ export const BilliardEditor = () => {
       TrainingAidCreator.createTrainingAidFiveCircles(fabricCanvas, pointer.x, pointer.y);
     } else if (activeTool === 'targetCircle') {
       TrainingAidCreator.createTargetCircle(fabricCanvas, pointer.x, pointer.y);
-    } else if (activeTool === 'ballNumber') {
-      TrainingAidCreator.createBallNumber(fabricCanvas, pointer.x, pointer.y, selectedBallNumber);
     }
   };
 

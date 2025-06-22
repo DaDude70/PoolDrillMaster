@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -15,7 +14,6 @@ import {
   FolderOpen,
   Play,
   ArrowUpRight,
-  Hash,
   CircleDot
 } from 'lucide-react';
 import { Tool } from '@/components/BilliardEditor';
@@ -56,7 +54,6 @@ export const FloatingToolbar = ({
     { id: 'trainingAid4' as Tool, label: 'Training Aid (4)', icon: Target, shortcut: '4' },
     { id: 'trainingAid5' as Tool, label: 'Training Aid (5)', icon: Target, shortcut: '5' },
     { id: 'targetCircle' as Tool, label: 'Target Circle', icon: CircleDot, shortcut: 'G' },
-    { id: 'ballNumber' as Tool, label: 'Ball Number', icon: Hash, shortcut: 'N' },
   ];
 
   return (

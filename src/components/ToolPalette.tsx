@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MousePointer, Circle, Square, Minus, Ruler, Target, ArrowUpRight, Hash, CircleDot } from 'lucide-react';
+import { MousePointer, Circle, Square, Minus, Ruler, Target, ArrowUpRight, CircleDot } from 'lucide-react';
 import { Tool } from './BilliardEditor';
 
 interface ToolPaletteProps {
@@ -22,7 +22,6 @@ export const ToolPalette = ({ activeTool, onToolChange }: ToolPaletteProps) => {
     { id: 'trainingAid4' as Tool, label: 'Training Aid (4)', icon: Target },
     { id: 'trainingAid5' as Tool, label: 'Training Aid (5)', icon: Target },
     { id: 'targetCircle' as Tool, label: 'Target Circle', icon: CircleDot },
-    { id: 'ballNumber' as Tool, label: 'Ball Number', icon: Hash },
   ];
 
   return (
